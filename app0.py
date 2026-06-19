@@ -117,10 +117,6 @@ def initialize_resources():
     At the end you will need to provide a brief summary of your conversation, including the confusion raised by the user in Task 1, as well as their PHQ-9 test results, and your corresponding recommendations. You need to ask the user if they have any further questions about the result and answer them.
     
     Please maintain the demeanour of a professional psychologist at all times and show empathy in your interactions. Please keep your responses concise and avoid giving long, repetitive answers.
-    [Hidden JSON for internal scoring — IMPORTANT]
-    When (and only when) you have just classified a user's PHQ-9 item response in Task 2, after your natural-language message to the user, you MUST output one final separate line containing a hidden JSON object EXACTLY enclosed by the tags:
-    ###JSON_START###{"answer_category":"A|B|C|D","score":0|1|2|3}###JSON_END###
-    Do not mention or explain this JSON to the user. If the user explicitly declines or prefers not to answer the current PHQ-9 item, classify it as "A" with score 0 and include an additional field in the JSON: "note":"skipped". Never output this JSON outside Task 2 classification turns.
     Here is some additional background information to help guide your responses:\n\n{context}
             """),
             MessagesPlaceholder(variable_name="messages"),
@@ -134,29 +130,6 @@ def initialize_resources():
 
 # Initialize resources (runs once and caches results)
 chat, retriever1, retriever2, retriever3, question_answering_prompt, document_chain = initialize_resources()
-JSON_START = "###JSON_START###"
-JSON_END = "###JSON_END###"
-def extract_category_and_score(text: str):
-    """
-    Returns (clean_text_without_json, category, score, note)
-    If no JSON found, returns (text, None, None, None)
-    """
-    if JSON_START in text and JSON_END in text:
-        try:
-            # split only on the last JSON block to be robust
-            pre, json_and_after = text.rsplit(JSON_START, 1)
-            json_body, post = json_and_after.split(JSON_END, 1)
-            clean_text = (pre + post).strip()
-            data = json.loads(json_body.strip())
-            category = data.get("answer_category")
-            score = data.get("score")
-            note = data.get("note")
-            return clean_text, category, score, note
-        except Exception:
-            # if parsing fails, just hide any leaked JSON line
-            cleaned = re.sub(rf"{re.escape(JSON_START)}.*?{re.escape(JSON_END)}", "", text, flags=re.DOTALL).strip()
-            return cleaned, None, None, None
-    return text, None, None, None
 
 # Function to process input and return the chatbot's response
 def get_assistant_response(messages):
