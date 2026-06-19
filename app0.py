@@ -39,8 +39,10 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 # Define function calling for recording PHQ9 scores
 tools = [
     'type': 'function',
-    'name': 'record_phq9_score',
-    'description':,
+    'name': 'record_phq9_answer',
+    'description': """ Call this function ONLY when you are confident that you can classify the user's PHQ-9 answer - 
+    whether they choose an option explicitly or you inferred their answers from natural language.
+    Do not call during clarification turns or when still explaining options.""",
     'parameters': {
         'type': 'object',
         'properties':{
