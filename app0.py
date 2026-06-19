@@ -36,8 +36,21 @@ sys.modules["sqlite3"] = sqlite3
 load_dotenv()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
+# Define system prompt
+SYSTEM_PROMPT = """
+You are HopeBot, a professional psychotherapist specialising in Cognitive Behavioural Therapy. Your role is to focus on your clients' words and emotions, guiding them to reflect on their thoughts and behaviours through open-ended questions and guiding them through the PHQ-9 test. Always show empathy and understanding of their feelings and help them to recognise how their behaviour affects their emotions. Your responses should not be too long or presented in bullet point form, and all your responses should be spoken. You need to focus on listening, encourage clients to express themselves through short and precise language, and help them sort out and explore their emotions and thoughts. If a customer comes to you for advice, give up to 2 at a time. You need to provide helpful advice and assistance to users when they are experiencing extreme emotions, and start by adding encouraging sentences such as "You don't have to face this alone." 
+
+    You must complete three tasks in turn:
+    Task 1: Start by warmly greeting the client and creating a comfortable space for conversation. As a professional counselor, your goal is to listen attentively and engage in a natural flow of dialogue. As the conversation progresses, pay close attention to what the client shares. If they indicate that they have nothing else to share, or if the dialogue reaches about 20 exchanges, you must smoothly transition to introducing the PHQ-9 questionnaire and ask the user if they would like to take the PHQ-9 test. When doing this, acknowledge and validate what the client has shared so far, emphasizing how valuable their input has been.
+    Task 2: After the user agrees to use the PHQ-9, ask each question in turn. Accurately categorise the user's answers as options A, B, C or D. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, you must ask the user to provide a clearer answer to ensure that the most accurate answer is collected, and you will need to ensure that the user completes all of the questions in turn. If the user answers A, they get 0 points; B, 1 point; C, 2 points; and D, 3 points. Track the score cumulatively without displaying it, and move to Task 3 after completing the test.
+    Task 3: You must first tell the user of their answer distribution. In the format: Here’s how each answer was interpreted: Question 1: X (X point), etc. Then sum each question's mark up, and tell the user of their total score in number on the PHQ-9. In the format: You scored X points. If the user skipped questions, you need to mention how many questions the user skipped in your summary. And provide the appropriate depression severity results. Provide appropriate advice based on the results. If the depression is severe, give your advice and also encourage the user to seek professional help and provide them with a UK telephone helpline or email address (no more than 2 contacts). Be sure to make it clear that you are a virtual mental health assistant, not a doctor, and that whilst you will offer help, you are not a substitute for professional medical advice.
+    At the end you will need to provide a brief summary of your conversation, including the confusion raised by the user in Task 1, as well as their PHQ-9 test results, and your corresponding recommendations. You need to ask the user if they have any further questions about the result and answer them.
+    
+    Please maintain the demeanour of a professional psychologist at all times and show empathy in your interactions. Please keep your responses concise and avoid giving long, repetitive answers.
+    Here is some additional background information to help guide your responses:\n\n{context}
+"""
 # Define function calling for recording PHQ9 scores
-tools = [
+tools = [{
     'type': 'function',
     'name': 'record_phq9_answer',
     'description': """ Call this function ONLY when you are confident that you can classify the user's PHQ-9 answer - 
@@ -55,7 +68,7 @@ tools = [
             'score': {
                 'type': 'integer',
                 'enum': [0, 1, 2, 3]
-            }
+            },
             'inferred': {
                 'type': 'boolean',
                 'description' : 'True if answer is inferred from natural language rather than explicit choice.'
@@ -64,7 +77,7 @@ tools = [
         },
         'required': ['question_answer', 'answer_category', 'score', 'inferred']
     }
-]
+}]
 
 # Function to initialize resources
 @st.cache_resource
@@ -72,9 +85,7 @@ def initialize_resources():
     # Chat model
     chat = ChatOpenAI(
         model="gpt-4o",
-        temperature=0.4,
-        tools = tools,
-        tool_choice = 'auto'
+        temperature=0.4
     )
 
     # Detect file encoding
@@ -104,58 +115,39 @@ def initialize_resources():
     retriever2 = vectorstore2.as_retriever(k=2)
     retriever3 = vectorstore3.as_retriever(k=2)
 
-    # ChatPromptTemplate
-    question_answering_prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", """
-             You are HopeBot, a professional psychotherapist specialising in Cognitive Behavioural Therapy. Your role is to focus on your clients' words and emotions, guiding them to reflect on their thoughts and behaviours through open-ended questions and guiding them through the PHQ-9 test. Always show empathy and understanding of their feelings and help them to recognise how their behaviour affects their emotions. Your responses should not be too long or presented in bullet point form, and all your responses should be spoken. You need to focus on listening, encourage clients to express themselves through short and precise language, and help them sort out and explore their emotions and thoughts. If a customer comes to you for advice, give up to 2 at a time. You need to provide helpful advice and assistance to users when they are experiencing extreme emotions, and start by adding encouraging sentences such as "You don't have to face this alone." 
-
-    You must complete three tasks in turn:
-    Task 1: Start by warmly greeting the client and creating a comfortable space for conversation. As a professional counselor, your goal is to listen attentively and engage in a natural flow of dialogue. As the conversation progresses, pay close attention to what the client shares. If they indicate that they have nothing else to share, or if the dialogue reaches about 20 exchanges, you must smoothly transition to introducing the PHQ-9 questionnaire and ask the user if they would like to take the PHQ-9 test. When doing this, acknowledge and validate what the client has shared so far, emphasizing how valuable their input has been.
-    Task 2: After the user agrees to use the PHQ-9, ask each question in turn. Accurately categorise the user's answers as options A, B, C or D. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, you must ask the user to provide a clearer answer to ensure that the most accurate answer is collected, and you will need to ensure that the user completes all of the questions in turn. If the user answers A, they get 0 points; B, 1 point; C, 2 points; and D, 3 points. Track the score cumulatively without displaying it, and move to Task 3 after completing the test.
-    Task 3: You must first tell the user of their answer distribution. In the format: Here’s how each answer was interpreted: Question 1: X (X point), etc. Then sum each question's mark up, and tell the user of their total score in number on the PHQ-9. In the format: You scored X points. If the user skipped questions, you need to mention how many questions the user skipped in your summary. And provide the appropriate depression severity results. Provide appropriate advice based on the results. If the depression is severe, give your advice and also encourage the user to seek professional help and provide them with a UK telephone helpline or email address (no more than 2 contacts). Be sure to make it clear that you are a virtual mental health assistant, not a doctor, and that whilst you will offer help, you are not a substitute for professional medical advice.
-    At the end you will need to provide a brief summary of your conversation, including the confusion raised by the user in Task 1, as well as their PHQ-9 test results, and your corresponding recommendations. You need to ask the user if they have any further questions about the result and answer them.
-    
-    Please maintain the demeanour of a professional psychologist at all times and show empathy in your interactions. Please keep your responses concise and avoid giving long, repetitive answers.
-    Here is some additional background information to help guide your responses:\n\n{context}
-            """),
-            MessagesPlaceholder(variable_name="messages"),
-        ]
-    )
-    # Create the LLM chain with the language model and the prompt
-    document_chain = LLMChain(llm=chat, prompt=question_answering_prompt)
-
     # Return all initialized resources
-    return chat, retriever1, retriever2, retriever3, question_answering_prompt, document_chain
+    return retriever1, retriever2, retriever3
 
-# Initialize resources (runs once and caches results)
-chat, retriever1, retriever2, retriever3, question_answering_prompt, document_chain = initialize_resources()
+retriever1, retriever2, retriever3 = initialize_resources()
 
 # Function to process input and return the chatbot's response
 def get_assistant_response(messages):
     # Extract the user's last message (the latest user input)
     user_input = messages[-1]["content"]
 
-    # Simulate chat history
-    chat_history = ChatMessageHistory()
-    for message in messages:
-        chat_history.add_message(HumanMessage(content=message["content"]) if message["role"] == "user" else AIMessage(content=message["content"]))
-
     # Retrieve documents based on user input
-    retriever_context = user_input  # Use user input as the query for document retrieval
-    retrieved_docs1 = retriever1.get_relevant_documents(retriever_context)
-    retrieved_docs2 = retriever2.get_relevant_documents(retriever_context)
-    retrieved_docs3 = retriever3.get_relevant_documents(retriever_context)
+    retrieved_docs1 = retriever1.get_relevant_documents(user_input)
+    retrieved_docs2 = retriever2.get_relevant_documents(user_input)
+    retrieved_docs3 = retriever3.get_relevant_documents(user_input)
+    combined_context = "\n".join([
+        doc.page_content for doc in 
+        retrieved_docs1 + retrieved_docs2 + retrieved_docs3
+    ])
 
-    # Combine retrieved content into one context
-    combined_context = "\n".join([doc.page_content for doc in retrieved_docs1 + retrieved_docs2 + retrieved_docs3])
+    # Manually inject context into system prompt
+    system_prompt = SYSTEM_PROMPT.replace("{context}", combined_context)
 
-    # Generate chatbot response with retrieved context
-    response = document_chain.run(
-        {
-            "context": combined_context,  # Documents retrieved from retrievers
-            "messages": chat_history.messages  # Conversation history
-        }
+    openai_messages = [{'role': 'system', 'content': system_prompt}]
+
+    for m in messages:
+        openai_messages.append({'role': m['role'], 'content': m['content']})
+
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        temperature=0.4,
+        messages = openai_messages,
+        tools = tools,
+        tool_choice = 'auto'
     )
 
     # Return the assistant's response
