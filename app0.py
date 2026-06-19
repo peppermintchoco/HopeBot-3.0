@@ -36,6 +36,34 @@ sys.modules["sqlite3"] = sqlite3
 load_dotenv()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
+# Define function calling for recording PHQ9 scores
+tools = [
+    'type': 'function',
+    'name': 'record_phq9_score',
+    'description':,
+    'parameters': {
+        'type': 'object',
+        'properties':{
+            'question_answer': {'type': 'integer'},
+            'answer_category': {
+                'type': 'string',
+                'enum': ['A', 'B', 'C', 'D'],
+                'description': 'A=Not at all, B=Several days, C=More than half the days, D=Nearly every day'
+            },
+            'score': {
+                'type': 'integer',
+                'enum': [0, 1, 2, 3]
+            }
+            'inferred': {
+                'type': 'boolean',
+                'description' : 'True if answer is inferred from natural language rather than explicit choice.'
+                },
+            'skipped': {'type': 'boolean'}
+        },
+        'required': ['question_answer', 'answer_category', 'score', 'inferred']
+    }
+]
+
 # Function to initialize resources
 @st.cache_resource
 def initialize_resources():
@@ -43,6 +71,8 @@ def initialize_resources():
     chat = ChatOpenAI(
         model="gpt-4o",
         temperature=0.4,
+        tools = tools,
+        tool_choice = 'auto'
     )
 
     # Detect file encoding
