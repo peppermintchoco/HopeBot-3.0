@@ -267,38 +267,42 @@ if audio_bytes:
                 )
             os.remove(audio_path)
 
-# 生成 HopeBot 回复
+# Generate HopeBot response
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant", avatar="🤖"):
         with st.spinner("Thinking 🤔..."):
-            final_response = get_assistant_response(st.session_state.messages)  # 生成文本回复
+            responses = get_assistant_response(st.session_state.messages)  # Generate text response
 
-        cleaned_text, category, score, note = extract_category_and_score(final_response)
-
-        # 默认展示“清理掉 JSON 的文本”；若未检测到 JSON，就展示原文
-        display_text = cleaned_text if cleaned_text is not None else final_response
-
-        # 如果有分类与得分，记录并累加
-        if category is not None and score is not None:
-            st.session_state.answers_record.append(category)
-            try:
-                st.session_state.total_phq9_score += int(score)
-            except Exception:
-                pass
-
+        # Extract the message object
+        message = response.choices[0].message
+        
+        if message.tool_calls:
+            tool_call = message.tool_calls[0]
+            data = json.loads(tool_call.function.arguments)
+            
+            st.session_state.answers_record.append(data['answer_category'])
+            st.session_state.total_phq9_score += int(data['score'])
+        
+            if data.get('inferred'):
+                st.session_state.inferred_answers.append(data["question_number"])
+        
+        # Get display text (replaces cleaned_text)
+        display_text = message.content or ""
+        
         with st.spinner("HopeBot is speaking 💬..."):
-            audio_file = text_to_speech(final_response)  # 提前生成语音
+            audio_file = text_to_speech(final_response)  # Generate audio in advance
 
-        # 同时显示文本和播放音频
+        # Display text and play audio simultaneously
         st.markdown(
             f"<p style='font-size: 24px; margin: 0;'>{final_response}</p>",
             unsafe_allow_html=True
         )
-        autoplay_audio(audio_file)  # 播放音频 
+        autoplay_audio(audio_file)  # Play audio
 
-        # 添加回复到会话状态
+        # Add response to session state
         st.session_state.messages.append({"role": "assistant", "content": final_response})
         os.remove(audio_file)
 
-# 浮动的麦克风按钮
+# Floating microphone button
 footer_container.float("bottom: 0rem;")
+
