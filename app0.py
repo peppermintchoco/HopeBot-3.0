@@ -49,6 +49,7 @@ You are HopeBot, a professional psychotherapist specialising in Cognitive Behavi
     Please maintain the demeanour of a professional psychologist at all times and show empathy in your interactions. Please keep your responses concise and avoid giving long, repetitive answers.
     Here is some additional background information to help guide your responses:\n\n{context}
 """
+
 # Define function calling for recording PHQ9 scores
 tools = [{
     'type': 'function',
@@ -199,6 +200,8 @@ def initialize_session_state():
         st.session_state.total_phq9_score = 0
     if "answers_record" not in st.session_state:
         st.session_state.answers_record = []  # e.g., ["A","B",...]
+    if 'inferred_answers' not in st.session_state:
+        st.session_state.inferred_answers - []
 
 initialize_session_state()
 
