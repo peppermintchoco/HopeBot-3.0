@@ -201,7 +201,11 @@ def initialize_session_state():
     if "answers_record" not in st.session_state:
         st.session_state.answers_record = []  # e.g., ["A","B",...]
     if 'inferred_answers' not in st.session_state:
-        st.session_state.inferred_answers - []
+        st.session_state.inferred_answers = []
+    if "agent_ran" not in st.session_state:
+        st.session_state.agent_ran = False
+    if "agent_results" not in st.session_state:
+        st.session_state.agent_results = None
 
 initialize_session_state()
 
@@ -237,6 +241,12 @@ def autoplay_audio(file_path):
         """,
         unsafe_allow_html=True,
     )
+
+# Function to trigger when phq-9 assessment is completed
+PHQ9_TOTAL_QUESTIONS = 9
+
+def phq9_complete():
+    return len(st.session_state.answers_record) == PHQ9_TOTAL_QUESTIONS
 
 # 浮动容器（用于麦克风）
 float_init()
@@ -277,7 +287,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
             responses = get_assistant_response(st.session_state.messages)  # Generate text response
 
         # Extract the message object
-        message = response.choices[0].message
+        message = responses.choices[0].message
         
         if message.tool_calls:
             tool_call = message.tool_calls[0]
@@ -288,22 +298,30 @@ if st.session_state.messages[-1]["role"] != "assistant":
         
             if data.get('inferred'):
                 st.session_state.inferred_answers.append(data["question_number"])
+
+        if phq9_complete() and not st.session_state.get("agent_ran"):
+            agent_results = run_hopebot_agent(
+            phq9_score=st.session_state.total_phq9_score,
+            conversation=st.session_state.messages)
+        
+            st.session_state.agent_results = agent_results
+            st.session_state.agent_ran = True
         
         # Get display text (replaces cleaned_text)
         display_text = message.content or ""
         
         with st.spinner("HopeBot is speaking 💬..."):
-            audio_file = text_to_speech(final_response)  # Generate audio in advance
+            audio_file = text_to_speech(display_text)  # Generate audio in advance
 
         # Display text and play audio simultaneously
         st.markdown(
-            f"<p style='font-size: 24px; margin: 0;'>{final_response}</p>",
+            f"<p style='font-size: 24px; margin: 0;'>{display_text}</p>",
             unsafe_allow_html=True
         )
         autoplay_audio(audio_file)  # Play audio
 
         # Add response to session state
-        st.session_state.messages.append({"role": "assistant", "content": final_response})
+        st.session_state.messages.append({"role": "assistant", "content": display_text})
         os.remove(audio_file)
 
 # Floating microphone button
