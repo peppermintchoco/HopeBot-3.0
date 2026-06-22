@@ -206,6 +206,8 @@ def initialize_session_state():
         st.session_state.agent_ran = False
     if "agent_results" not in st.session_state:
         st.session_state.agent_results = None
+    if "phq9_scores_by_question" not in st.session_state:
+        st.session_state.phq9_scores_by_question = []
 
 initialize_session_state()
 
@@ -295,6 +297,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
             
             st.session_state.answers_record.append(data['answer_category'])
             st.session_state.total_phq9_score += int(data['score'])
+            st.session_state.phq9_scores_by_question.append(data["score"])
         
             if data.get('inferred'):
                 st.session_state.inferred_answers.append(data["question_number"])
@@ -302,7 +305,8 @@ if st.session_state.messages[-1]["role"] != "assistant":
         if phq9_complete() and not st.session_state.get("agent_ran"):
             agent_results = run_pipeline(
             phq9_score=st.session_state.total_phq9_score,
-            conversation=st.session_state.messages)
+            conversation=st.session_state.messages,
+            q9_score = st.session_state.phq9_scores_by_question[8])
         
             st.session_state.agent_results = agent_results
             st.session_state.agent_ran = True
