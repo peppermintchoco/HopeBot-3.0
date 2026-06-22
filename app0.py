@@ -31,6 +31,8 @@ import sys
 import json
 import re
 
+from agent import run_pipeline
+
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
 sys.modules["sqlite3"] = sqlite3
 load_dotenv()
@@ -304,10 +306,14 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 st.session_state.inferred_answers.append(data["question_number"])
 
         if phq9_complete() and not st.session_state.get("agent_ran"):
-            agent_results = run_pipeline(
-            phq9_score=st.session_state.total_phq9_score,
-            conversation=st.session_state.messages,
-            q9_score = st.session_state.phq9_scores_by_question[8])
+            screening_data = {
+                "email": None,
+                "score": st.session_state.total_phq9_score,
+                "assessment_type": "PHQ-9",
+                "question_9": st.session_state.phq9_scores_by_question[8]
+            }
+
+            agent_results = run_pipeline(screening_data)
         
             st.session_state.agent_results = agent_results
             st.session_state.agent_ran = True
