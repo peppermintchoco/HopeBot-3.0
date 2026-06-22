@@ -31,7 +31,7 @@ import sys
 import json
 import re
 
-from agent import run_pipeline
+from my_agent import run_pipeline
 
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
 sys.modules["sqlite3"] = sqlite3
@@ -156,42 +156,7 @@ def get_assistant_response(messages):
 
     # Return the assistant's response
     return response
-
-
-def speech_to_text(audio_data):
-    with open(audio_data, "rb") as audio_file:
-        transcript = openai.audio.transcriptions.create(
-            model="whisper-1",
-            response_format="text",
-            file=audio_file
-        )
-    return transcript
-
-def text_to_speech(input_text):
-    response = openai.audio.speech.create(
-        model="tts-1",
-        voice="nova",
-        input=input_text
-    )
-    webm_file_path = "temp_audio_play.mp3"
-    with open(webm_file_path, "wb") as f:
-        response.stream_to_file(webm_file_path)
-    return webm_file_path
-
-def autoplay_audio(file_path: str):
-    with open(file_path, "rb") as f:
-        data = f.read()
-    b64 = base64.b64encode(data).decode("utf-8")
-    md = f"""
-    <audio autoplay>
-    <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-    </audio>
-    """
-    st.markdown(md, unsafe_allow_html=True)
 # ------------------------------------------------------------------------------------------------------------------------------------------------logic2END
-
-# Float feature initialization
-float_init()
 
 # 初始化会话状态
 def initialize_session_state():
