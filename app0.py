@@ -53,6 +53,7 @@ You are HopeBot, a professional psychotherapist specialising in Cognitive Behavi
 # Define function calling for recording PHQ9 scores
 tools = [{
     'type': 'function',
+    'function': {
     'name': 'record_phq9_answer',
     'description': """ Call this function ONLY when you are confident that you can classify the user's PHQ-9 answer - 
     whether they choose an option explicitly or you inferred their answers from natural language.
@@ -77,7 +78,7 @@ tools = [{
             'skipped': {'type': 'boolean'}
         },
         'required': ['question_answer', 'answer_category', 'score', 'inferred']
-    }
+    }}
 }]
 
 # Function to initialize resources
