@@ -117,9 +117,9 @@ def get_assistant_response(messages):
     user_input = messages[-1]["content"]
 
     # Retrieve documents based on user input
-    retrieved_docs1 = retriever1.get_relevant_documents(user_input)
-    retrieved_docs2 = retriever2.get_relevant_documents(user_input)
-    retrieved_docs3 = retriever3.get_relevant_documents(user_input)
+    retrieved_docs1 = retriever1.invoke(user_input)
+    retrieved_docs2 = retriever2.invoke(user_input)
+    retrieved_docs3 = retriever3.invoke(user_input)
     combined_context = "\n".join([
         doc.page_content for doc in 
         retrieved_docs1 + retrieved_docs2 + retrieved_docs3
@@ -246,7 +246,7 @@ if typed_input and typed_input.strip():
 if audio_bytes:
     if "last_audio" not in st.session_state or st.session_state.last_audio != audio_bytes:
         st.session_state.last_audio = audio_bytes
-        
+
     with st.spinner("Transcribing..."):
         audio_path = "temp_audio.mp3"
         with open(audio_path, "wb") as f:
