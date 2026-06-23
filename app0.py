@@ -1,28 +1,22 @@
 import streamlit as st
-from streamlit_chat import message
 import os
-import time
 from audio_recorder_streamlit import audio_recorder
 from streamlit_float import float_init
 import base64
+import sys
+import json
+import chardet
 
 # --------------------------------------------------------------------------------------------------------------------------logic2END
 import openai
-from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import base64
 import streamlit as st
 import openai
-from langchain_community.chat_models import ChatOpenAI
-from langchain_openai import OpenAIEmbeddings
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
-import chardet
 import pysqlite3 as sqlite3
-import sys
-import json
-import re
 
 from my_agent import run_pipeline
 
