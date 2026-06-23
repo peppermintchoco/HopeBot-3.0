@@ -16,12 +16,12 @@ import streamlit as st
 import openai
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
-import pysqlite3 as sqlite3
+# import pysqlite3 as sqlite3
 
-from my_agent import run_pipeline
+from my_agent.agent import run_pipeline
 
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
-sys.modules["sqlite3"] = sqlite3
+# sys.modules["sqlite3"] = sqlite3
 load_dotenv()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -150,6 +150,13 @@ def extract_agent_responses(agent_results):
         if hasattr(message, 'content') and message.content:
             return message.content
     return ""
+
+def display_text(content):
+    st.markdown(
+        f"<p style='font-size: 24px; margin: 0;'>{content}</p>",
+        unsafe_allow_html=True
+    )
+
 # ------------------------------------------------------------------------------------------------------------------------------------------------logic2END
 
 # 初始化会话状态
@@ -228,8 +235,18 @@ for message in st.session_state.messages:
             unsafe_allow_html=True
         )
 
-# 处理语音输入
+# (1) Input from user
+typed_input = st.chat_input("Type your message here, or use the microphone.")
+user_message_parts = []
+
+if typed_input and typed_input.strip():
+    st.session_state.messages.append({"role": "user", "content": typed_input})
+    st.rerun()
+
 if audio_bytes:
+    if "last_audio" not in st.session_state or st.session_state.last_audio != audio_bytes:
+        st.session_state.last_audio = audio_bytes
+        
     with st.spinner("Transcribing..."):
         audio_path = "temp_audio.mp3"
         with open(audio_path, "wb") as f:
@@ -237,16 +254,12 @@ if audio_bytes:
 
         transcript = speech_to_text(audio_path)
         if transcript:
-            # 添加用户消息
             st.session_state.messages.append({"role": "user", "content": transcript})
-            with st.chat_message("user", avatar="🤗"):
-                st.markdown(
-                    f"<p style='font-size: 24px; margin: 0;'>{transcript}</p>",
-                    unsafe_allow_html=True
-                )
+            display_text(transcript)
             os.remove(audio_path)
+            st.rerun()
 
-# Generate HopeBot response
+# (2) Generate HopeBot response
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant", avatar="🤖"):
         
@@ -258,7 +271,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
         message = responses.choices[0].message
 
         # Get display text (replaces cleaned_text)
-        display_text = message.content or ""
+        display_messages = message.content or ""
         
         if message.tool_calls:
             tool_call = message.tool_calls[0]
@@ -269,7 +282,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
             st.session_state.phq9_scores_by_question.append(data["score"])
         
             if data.get('inferred'):
-                st.session_state.inferred_answers.append(data["question_number"])
+                st.session_state.inferred_answers.append(data["question_answer"])
         
         # Step 2: Agent fires immediately after, appends its own message
         if phq9_complete() and not st.session_state.get("agent_ran"):
@@ -297,17 +310,14 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 )
         
         with st.spinner("HopeBot is speaking 💬..."):
-            audio_file = text_to_speech(display_text)  # Generate audio in advance
+            audio_file = text_to_speech(display_messages)  # Generate audio in advance
 
         # Display text and play audio simultaneously
-        st.markdown(
-            f"<p style='font-size: 24px; margin: 0;'>{display_text}</p>",
-            unsafe_allow_html=True
-        )
+        display_text(display_messages)
         autoplay_audio(audio_file)  # Play audio
 
         # Add response to session state
-        st.session_state.messages.append({"role": "assistant", "content": display_text})
+        st.session_state.messages.append({"role": "assistant", "content": display_messages})
         os.remove(audio_file)
 
 # Floating microphone button
