@@ -17,14 +17,7 @@ import openai
 from langchain_community.chat_models import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain.prompts import ChatPromptTemplate
-from langchain.chains import LLMChain
-from langchain_core.runnables import RunnablePassthrough
-from langchain_community.document_loaders import TextLoader
 import chardet
 import pysqlite3 as sqlite3
 import sys
@@ -156,6 +149,13 @@ def get_assistant_response(messages):
 
     # Return the assistant's response
     return response
+
+def extract_agent_responses(agent_results):
+    messages = agent_results['messages']
+    for message in reversed(messages):
+        if hasattr(message, 'content') and message.content:
+            return message.content
+    return ""
 # ------------------------------------------------------------------------------------------------------------------------------------------------logic2END
 
 # 初始化会话状态
@@ -212,6 +212,8 @@ def autoplay_audio(file_path):
         unsafe_allow_html=True,
     )
 
+# ------------------------------------------------------------------------------------------------------------------------------------------------
+
 # Function to trigger when phq-9 assessment is completed
 PHQ9_TOTAL_QUESTIONS = 9
 
@@ -253,11 +255,16 @@ if audio_bytes:
 # Generate HopeBot response
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant", avatar="🤖"):
+        
+        # Step 1: HopeBot generates Task 3 response
         with st.spinner("Thinking 🤔..."):
             responses = get_assistant_response(st.session_state.messages)  # Generate text response
 
         # Extract the message object
         message = responses.choices[0].message
+
+        # Get display text (replaces cleaned_text)
+        display_text = message.content or ""
         
         if message.tool_calls:
             tool_call = message.tool_calls[0]
@@ -269,7 +276,8 @@ if st.session_state.messages[-1]["role"] != "assistant":
         
             if data.get('inferred'):
                 st.session_state.inferred_answers.append(data["question_number"])
-
+        
+        # Step 2: Agent fires immediately after, appends its own message
         if phq9_complete() and not st.session_state.get("agent_ran"):
             screening_data = {
                 "email": None,
@@ -279,12 +287,20 @@ if st.session_state.messages[-1]["role"] != "assistant":
             }
 
             agent_results = run_pipeline(screening_data)
+            agent_message = extract_agent_responses(agent_results)
         
             st.session_state.agent_results = agent_results
             st.session_state.agent_ran = True
-        
-        # Get display text (replaces cleaned_text)
-        display_text = message.content or ""
+            st.session_state.messages.append({
+                'role': 'assistant',
+                'content': agent_message
+            })
+
+            with st.chat_message("assistant", avatar="🤖"):
+                st.markdown(
+                    f"<p style='font-size: 24px; margin: 0;'>{agent_message}</p>",
+                    unsafe_allow_html=True
+                )
         
         with st.spinner("HopeBot is speaking 💬..."):
             audio_file = text_to_speech(display_text)  # Generate audio in advance
