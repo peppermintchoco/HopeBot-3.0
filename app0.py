@@ -7,7 +7,6 @@ import sys
 import json
 import chardet
 
-# --------------------------------------------------------------------------------------------------------------------------logic2END
 import openai
 import os
 from dotenv import load_dotenv
@@ -16,9 +15,12 @@ import streamlit as st
 import openai
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
+from langchain_core.messages import HumanMessage, AIMessage
 # import pysqlite3 as sqlite3
 
-from my_agent.agent import run_pipeline
+from my_agent.agent import run_pipeline, app
+
+# --------------------------------------------------------------------------------------------------------------------------logic2END
 
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
 # sys.modules["sqlite3"] = sqlite3
@@ -30,11 +32,18 @@ SYSTEM_PROMPT = """
 You are HopeBot, a professional psychotherapist specialising in Cognitive Behavioural Therapy. Your role is to focus on your clients' words and emotions, guiding them to reflect on their thoughts and behaviours through open-ended questions and guiding them through the PHQ-9 test. Always show empathy and understanding of their feelings and help them to recognise how their behaviour affects their emotions. Your responses should not be too long or presented in bullet point form, and all your responses should be spoken. You need to focus on listening, encourage clients to express themselves through short and precise language, and help them sort out and explore their emotions and thoughts. If a customer comes to you for advice, give up to 2 at a time. You need to provide helpful advice and assistance to users when they are experiencing extreme emotions, and start by adding encouraging sentences such as "You don't have to face this alone." 
 
     You must complete three tasks in turn:
-    Task 1: Start by warmly greeting the client and creating a comfortable space for conversation. As a professional counselor, your goal is to listen attentively and engage in a natural flow of dialogue. As the conversation progresses, pay close attention to what the client shares. If they indicate that they have nothing else to share, or if the dialogue reaches about 20 exchanges, you must smoothly transition to introducing the PHQ-9 questionnaire and ask the user if they would like to take the PHQ-9 test. When doing this, acknowledge and validate what the client has shared so far, emphasizing how valuable their input has been.
-    Task 2: After the user agrees to use the PHQ-9, ask each question in turn. Accurately categorise the user's answers as options A, B, C or D. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, you must ask the user to provide a clearer answer to ensure that the most accurate answer is collected, and you will need to ensure that the user completes all of the questions in turn. If the user answers A, they get 0 points; B, 1 point; C, 2 points; and D, 3 points. Track the score cumulatively without displaying it, and move to Task 3 after completing the test.
-    Task 3: You must first tell the user of their answer distribution. In the format: Here’s how each answer was interpreted: Question 1: X (X point), etc. Then sum each question's mark up, and tell the user of their total score in number on the PHQ-9. In the format: You scored X points. If the user skipped questions, you need to mention how many questions the user skipped in your summary. And provide the appropriate depression severity results. Be sure to make it clear that you are a virtual mental health assistant, not a doctor, and that whilst you will offer help, you are not a substitute for professional medical advice. Then let them know you are connecting them with HopeBot's care coordinator for further support and resources.
-    At the end you will need to provide a brief summary of your conversation, including the confusion raised by the user in Task 1, as well as their PHQ-9 test results, and your corresponding recommendations. You need to ask the user if they have any further questions about the result and answer them.
+    Task 1: Start by warmly greeting the client and creating a comfortable space for conversation. As a professional counselor, your goal is to listen attentively and engage in a 
+    natural flow of dialogue. As the conversation progresses, pay close attention to what the client shares. 
+    If they indicate that they have nothing else to share, or if the dialogue reaches about 20 exchanges, you must smoothly transition to introducing the PHQ-9 questionnaire and 
+    ask the user if they would like to take the PHQ-9 test. When doing this, acknowledge and validate what the client has shared so far, emphasizing how valuable their input has been.
     
+    Task 2: After the user agrees to use the PHQ-9, ask each question in turn. Accurately categorise the user's answers as options A, B, C or D using 
+    record_phq9_answer. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, ask the user to provide a clearer 
+    answer. You must call record_phq9_answer immediately after classifying each answer, one question at a time, before moving to the next question.
+
+    Task 3: Once all 9 questions have been classified, simply acknowledge that the assessment is complete and let the user know you are connecting 
+    them with HopeBot's care coordinator who will share their full results and next steps. Do not list scores, categories, or totals yourself — this is handled separately.
+
     Please maintain the demeanour of a professional psychologist at all times and show empathy in your interactions. Please keep your responses concise and avoid giving long, repetitive answers.
     Here is some additional background information to help guide your responses:\n\n{context}
 """
@@ -44,9 +53,11 @@ tools = [{
     'type': 'function',
     'function': {
     'name': 'record_phq9_answer',
-    'description': """ Call this function ONLY when you are confident that you can classify the user's PHQ-9 answer - 
-    whether they choose an option explicitly or you inferred their answers from natural language.
-    Do not call during clarification turns or when still explaining options.""",
+    'description': """ Call this function ONLY when you are confident that you can classify the user's PHQ-9 answer — whether they chose an option explicitly or you inferred 
+    their answer from natural language. Do not call during clarification turns or when still explaining options.
+    For Question 9 specifically: responses like "I don't think so", "not really", "I haven't had those", "no" should be classified as A (Not at all, score 0). 
+    Do not leave Q9 unrecorded — it must be classified before Task 3 begins.
+    """,
     'parameters': {
         'type': 'object',
         'properties':{
@@ -125,8 +136,27 @@ def get_assistant_response(messages):
         retrieved_docs1 + retrieved_docs2 + retrieved_docs3
     ])
 
+    # Build progress context
+    recorded = st.session_state.recorded_question_numbers
+    pending = [q for q in range(1, 10) if q not in recorded]
+    print(f"DEBUG progress tracker - recorded: {recorded}, pending: {pending}")
+
+    if pending:
+        next_required = min(pending)
+        progress_note = f"""
+        PHQ-9 PROGRESS TRACKER (do not share with user): 
+        - Questions recorded so far: {recorded}. 
+        - PENDING (must still be recorded): {pending}. 
+        - NEXT question to ask: Question {next_required}
+        - CRITICAL: Ask ONLY question {next_required} next. Do NOT skip ahead. Do not ask any other PHQ-9 question until Question {next_required} 
+        has been recorded via the record_phq9_answer function.
+        - Do NOT proceed to Task 3 until all pending questions are recorded via record_phq9_answer.
+        """
+    else:
+        progress_note = f"\n\nPHQ-9 PROGRESS TRACKER: All 9 questions recorded. Proceed to Task 3."
+ 
     # Manually inject context into system prompt
-    system_prompt = SYSTEM_PROMPT.replace("{context}", combined_context)
+    system_prompt = SYSTEM_PROMPT.replace("{context}", combined_context) + progress_note
 
     openai_messages = [{'role': 'system', 'content': system_prompt}]
 
@@ -142,22 +172,73 @@ def get_assistant_response(messages):
     )
 
     # Return the assistant's response
-    return response
+    return response, openai_messages
 
 def extract_agent_responses(agent_results):
     messages = agent_results['messages']
+
+    # Debug
+    for msg in messages:
+        print(f"DEBUG agent msg type: {type(msg).__name__}, content: {str(msg.content)[:100]}")
+
     for message in reversed(messages):
         if hasattr(message, 'content') and message.content:
             return message.content
     return ""
 
 def display_text(content):
+    formatted = content.replace("\n", "<br>")
     st.markdown(
-        f"<p style='font-size: 24px; margin: 0;'>{content}</p>",
+        f"<p style='font-size: 24px; margin: 0;'>{formatted}</p>",
         unsafe_allow_html=True
     )
 
-# ------------------------------------------------------------------------------------------------------------------------------------------------logic2END
+# 语音识别功能
+def speech_to_text(audio_path):
+    with open(audio_path, "rb") as audio_file:
+        transcript = openai.audio.transcriptions.create(
+            model="whisper-1", response_format="text", file=audio_file
+        )
+    return transcript.strip()
+
+# 语音合成功能
+def text_to_speech(text):
+    response = openai.audio.speech.create(model="tts-1", voice="nova", input=text)
+    audio_path = "response_audio.mp3"
+    with open(audio_path, "wb") as f:
+        f.write(response.content)
+    return audio_path
+
+# 音频播放功能
+def autoplay_audio(file_path):
+    with open(file_path, "rb") as f:
+        data = f.read()
+    b64_audio = base64.b64encode(data).decode("utf-8")
+    st.markdown(
+        f"""
+        <audio autoplay>
+        <source src="data:audio/mp3;base64,{b64_audio}" type="audio/mp3">
+        </audio>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# Function to build assessment score summary
+def build_score_summary():
+    categories = {"A": 0, "B": 1, "C": 2, "D": 3}
+    category_labels = {
+        "A": "Not at all", "B": "Several days", 
+        "C": "More than half the days", "D": "Nearly every day"
+    }
+
+    lines = ["Here's how each answer was interpreted:"]
+    for i, cat in enumerate(st.session_state.answers_record, 1):
+        score = categories[cat]
+        lines.append(f"Question {i}: {category_labels[cat]} ({score} point)")
+    
+    lines.append(f"\nYou scored {st.session_state.total_phq9_score} points on the PHQ-9.")
+    
+    return "<br>".join(lines)
 
 # 初始化会话状态
 def initialize_session_state():
@@ -177,49 +258,21 @@ def initialize_session_state():
         st.session_state.agent_results = None
     if "phq9_scores_by_question" not in st.session_state:
         st.session_state.phq9_scores_by_question = []
+    if "recorded_question_numbers" not in st.session_state:
+        st.session_state.recorded_question_numbers = []
 
 initialize_session_state()
 
 # 标题
 st.title("HopeBot: Your Mental Health Assistant 🤖")
 
-# 语音识别功能
-def speech_to_text(audio_path):
-    with open(audio_path, "rb") as audio_file:
-        transcript = openai.audio.transcriptions.create(
-            model="whisper-1", response_format="text", file=audio_file
-        )
-    return transcript.strip()
-
-# 语音合成功能
-def text_to_speech(text):
-    response = openai.audio.speech.create(model="tts-1", voice="nova", input=text)
-    audio_path = "response_audio.mp3"
-    with open(audio_path, "wb") as f:
-        response.stream_to_file(audio_path)
-    return audio_path
-
-# 音频播放功能
-def autoplay_audio(file_path):
-    with open(file_path, "rb") as f:
-        data = f.read()
-    b64_audio = base64.b64encode(data).decode("utf-8")
-    st.markdown(
-        f"""
-        <audio autoplay>
-        <source src="data:audio/mp3;base64,{b64_audio}" type="audio/mp3">
-        </audio>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# ------------------------------------------------------------------------------------------------------------------------------------------------
-
 # Function to trigger when phq-9 assessment is completed
 PHQ9_TOTAL_QUESTIONS = 9
 
 def phq9_complete():
     return len(st.session_state.answers_record) == PHQ9_TOTAL_QUESTIONS
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
 
 # 浮动容器（用于麦克风）
 float_init()
@@ -230,10 +283,13 @@ with footer_container:
 # 显示聊天历史（使用气泡样式和头像）
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar="🤖" if message["role"] == "assistant" else "🤗"):
-        st.markdown(
-            f"<p style='font-size: 24px; margin: 0;'>{message['content']}</p>",
-            unsafe_allow_html=True
-        )
+        if message.get("type") == "agent":
+            st.markdown(message["content"])  # renders markdown
+        else:
+            st.markdown(
+                f"<p style='font-size: 24px; margin: 0;'>{message['content']}</p>",
+                unsafe_allow_html=True
+            )
 
 # (1) Input from user
 typed_input = st.chat_input("Type your message here, or use the microphone.")
@@ -259,66 +315,166 @@ if audio_bytes:
             os.remove(audio_path)
             st.rerun()
 
-# (2) Generate HopeBot response
+# ---------------------------------------------------------------------------------------------------------------------------------------------
 if st.session_state.messages[-1]["role"] != "assistant":
-    with st.chat_message("assistant", avatar="🤖"):
-        
-        # Step 1: HopeBot generates Task 3 response
-        with st.spinner("Thinking 🤔..."):
-            responses = get_assistant_response(st.session_state.messages)  # Generate text response
 
-        # Extract the message object
-        message = responses.choices[0].message
-
-        # Get display text (replaces cleaned_text)
-        display_messages = message.content or ""
+    if st.session_state.get("agent_ran"):
+        with st.chat_message("assistant", avatar="🤖"):
+            with st.spinner("Thinking 🤔..."):
+                continued_messages = [
+                    HumanMessage(content=m["content"]) 
+                    if m["role"] == "user" 
+                    else AIMessage(content=m["content"])
+                    for m in st.session_state.messages
+                ]
+                continued_result = app.invoke({"messages": continued_messages})
+                continued_response = extract_agent_responses(continued_result)
         
-        if message.tool_calls:
-            tool_call = message.tool_calls[0]
-            data = json.loads(tool_call.function.arguments)
+            if continued_response:
+                st.markdown(continued_response)
+                with st.spinner("HopeBot is speaking 💬..."):
+                        audio_file = text_to_speech(continued_response)
+                autoplay_audio(audio_file)
+                os.remove(audio_file)
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": continued_response,
+                    "type": 'agent'
+                })
+
+    # Otherwise HopeBot handles it
+    else:
+        with st.chat_message("assistant", avatar="🤖"):
+            # Step 1: HopeBot generates response
+            with st.spinner("Thinking 🤔..."):
+                responses, openai_messages = get_assistant_response(st.session_state.messages)
+
+            # Extract the message object
+            message = responses.choices[0].message
+
+            # Get display text (replaces cleaned_text)
+            display_messages = message.content or ""
             
-            st.session_state.answers_record.append(data['answer_category'])
-            st.session_state.total_phq9_score += int(data['score'])
-            st.session_state.phq9_scores_by_question.append(data["score"])
-        
-            if data.get('inferred'):
-                st.session_state.inferred_answers.append(data["question_answer"])
-        
-        # Step 2: Agent fires immediately after, appends its own message
-        if phq9_complete() and not st.session_state.get("agent_ran"):
-            screening_data = {
-                "email": None,
-                "score": st.session_state.total_phq9_score,
-                "assessment_type": "PHQ-9",
-                "question_9": st.session_state.phq9_scores_by_question[8]
-            }
+            if message.tool_calls:
+                tool_call = message.tool_calls[0]
+                data = json.loads(tool_call.function.arguments)
+                q_num = data['question_answer']
 
-            agent_results = run_pipeline(screening_data)
-            agent_message = extract_agent_responses(agent_results)
-        
-            st.session_state.agent_results = agent_results
-            st.session_state.agent_ran = True
-            st.session_state.messages.append({
-                'role': 'assistant',
-                'content': agent_message
-            })
+                # Only record if this question hasn't been recorded yet
+                if q_num not in st.session_state.recorded_question_numbers:
+                    st.session_state.recorded_question_numbers.append(q_num)
+                    st.session_state.answers_record.append(data['answer_category'])
+                    st.session_state.total_phq9_score += int(data['score'])
+                    st.session_state.phq9_scores_by_question.append(data["score"])
 
-            with st.chat_message("assistant", avatar="🤖"):
-                st.markdown(
-                    f"<p style='font-size: 24px; margin: 0;'>{agent_message}</p>",
-                    unsafe_allow_html=True
+                    print(f"DEBUG RECORDED: Q{q_num} = {data['answer_category']} ({data['score']})")
+                else:
+                    print(f"DEBUG DUPLICATE IGNORED: Q{q_num} already recorded")
+            
+                if data.get('inferred'):
+                    st.session_state.inferred_answers.append(q_num)
+
+                # Send tool result back so model asks next question
+                tool_result_messages = openai_messages + [
+                    {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [{
+                            "id": tool_call.id,
+                            "type": "function",
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments
+                            }
+                        }]
+                    },
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": "Answer recorded successfully."
+                    }
+                ]
+
+                follow_up = openai.chat.completions.create(
+                    model="gpt-4o",
+                    temperature=0.4,
+                    messages=tool_result_messages,
+                    tools=tools,
+                    tool_choice="none"
                 )
-        
-        with st.spinner("HopeBot is speaking 💬..."):
-            audio_file = text_to_speech(display_messages)  # Generate audio in advance
 
-        # Display text and play audio simultaneously
-        display_text(display_messages)
-        autoplay_audio(audio_file)  # Play audio
+                # Add these temporarily
+                print(f"DEBUG follow_up content: '{follow_up.choices[0].message.content}'")
+                print(f"DEBUG follow_up tool_calls: {follow_up.choices[0].message.tool_calls}")
 
-        # Add response to session state
-        st.session_state.messages.append({"role": "assistant", "content": display_messages})
-        os.remove(audio_file)
+                display_messages = follow_up.choices[0].message.content or ""
+            
+            # Display HopeBot response
+            if display_messages:
+                with st.spinner("HopeBot is speaking 💬..."):
+                    audio_file = text_to_speech(display_messages)  # Generate audio in advance
+
+                # Display text and play audio simultaneously
+                display_text(display_messages)
+                autoplay_audio(audio_file)  # Play audio
+                os.remove(audio_file)
+
+                # Add response to session state
+                st.session_state.messages.append({
+                    "role": "assistant", 
+                    "content": display_messages,
+                    "type": "hopebot"})
+            
+            # Agent fires immediately after, appends its own message
+            print(f"DEBUG before agent check: len={len(st.session_state.answers_record)}, agent_ran={st.session_state.agent_ran}")
+
+            if phq9_complete() and not st.session_state.get("agent_ran"):
+                print(f"DEBUG: AGENT FIRING")
+                
+                try:
+                    summary_text = build_score_summary()
+                    display_text(summary_text)
+
+                    st.session_state.messages.append({
+                        "role": "assistant", 
+                        "content": summary_text
+                    })
+                    
+                    screening_data = {
+                        "email": None,
+                        "score": st.session_state.total_phq9_score,
+                        "assessment_type": "PHQ-9",
+                        "question_9": st.session_state.phq9_scores_by_question[8]
+                    }
+
+                    # Debug Code
+                    print(f"DEBUG screening_data: {screening_data}")
+                    
+                    agent_results = run_pipeline(screening_data)
+                    
+                    print(f"DEBUG agent_results keys: {agent_results.keys()}")
+                    
+                    agent_message = extract_agent_responses(agent_results)
+                    
+                    print(f"DEBUG agent_message preview: '{agent_message[:100]}'")
+                    
+                    st.session_state.agent_results = agent_results
+                    st.session_state.agent_ran = True
+                    st.session_state.messages.append({
+                        'role': 'assistant',
+                        'content': agent_message,
+                        'type': 'agent'
+                    })
+
+                    st.markdown(agent_message)
+                
+                except Exception as e:
+                    print(f"DEBUG AGENT ERROR: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    st.error(f"Agent error: {e}")
+            else:
+                print(f"DEBUG: agent NOT firing - len={len(st.session_state.answers_record)}, agent_ran={st.session_state.get('agent_ran')}")
 
 # Floating microphone button
 footer_container.float("bottom: 0rem;")
