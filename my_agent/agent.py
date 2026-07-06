@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-load_dotenv(dotenv_path = os.path.join(os.path.dirname(__file__), 'my_agent/.env'))
+load_dotenv(dotenv_path = os.path.join(os.path.dirname(__file__), '.env'))
 
 from my_agent.tools import send_email, psychoeducation, session_prep, calendar_input
 
@@ -110,12 +110,12 @@ TRIAGE_MAP = {
     'Minimal': 'Minimal',
     'Mild': 'Mild',
     'Moderate': 'Moderate-to-severe',
-    'Moderately severe': 'Moderate-to-severe',
+    'Moderately Severe': 'Moderate-to-severe',
     'Severe': 'Moderate-to-severe'
 }
 
 CUTOFFS = {
-    "PHQ-9": [(5, "Minimal"), (10, "Mild"), (15, "Moderate"), (20, "Moderately severe"), (28, "Severe")],
+    "PHQ-9": [(5, "Minimal"), (10, "Mild"), (15, "Moderate"), (20, "Moderately Severe"), (28, "Severe")],
     "GAD-7": [(5, "Minimal"), (10, "Mild"), (15, "Moderate"), (22, "Severe")],
 }
 
@@ -187,6 +187,9 @@ def run_pipeline(screening_data: dict):
     Triage Category: {triage_category}
     Pathway: {routing_dict['pathway']}
     Available Tools: {', '.join(TOOL_DISPLAY_NAMES[t] for t in routing_dict['tools'])}
+
+    IMPORTANT: When calling the psychoeducation tool, use assessment_type="{assessment}" 
+    and severity="{severity}" (NOT the triage category).
 
     Based on the above triage, respond to the patient and use the available tools to coordinate their care.
     """
