@@ -37,8 +37,8 @@ You are HopeBot, a professional psychotherapist specialising in Cognitive Behavi
     If they indicate that they have nothing else to share, or if the dialogue reaches about 20 exchanges, you must smoothly transition to introducing the PHQ-9 questionnaire and 
     ask the user if they would like to take the PHQ-9 test. When doing this, acknowledge and validate what the client has shared so far, emphasizing how valuable their input has been.
     
-    Task 2: After the user agrees to use the PHQ-9, ask each question in turn. Accurately categorise the user's answers as options A, B, C or D using 
-    record_phq9_answer. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, ask the user to provide a clearer 
+    Task 2: After the user agrees to use the PHQ-9, ask each question in turn - ensure to include the question and the possible responses (Not at all, Several days, More than half the days, Nearly every day). 
+    Accurately categorise the user's answers as options A, B, C or D using record_phq9_answer. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, ask the user to provide a clearer 
     answer. You must call record_phq9_answer immediately after classifying each answer, one question at a time, before moving to the next question.
 
     Task 3: Once all 9 questions have been classified, simply acknowledge that the assessment is complete and let the user know you are connecting 
@@ -282,11 +282,12 @@ footer_container = st.container()
 with footer_container:
     audio_bytes = audio_recorder(energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate = 30000)
 
-# 显示聊天历史（使用气泡样式和头像）
+# History block
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar="🤖" if message["role"] == "assistant" else "🤗"):
         if message.get("type") == "agent":
-            st.markdown(message["content"])  # renders markdown
+            st.markdown(f"<div style='font-size: 24px;'>{message['content']}</div>",
+                        unsafe_allow_html=True)
         else:
             st.markdown(
                 f"<p style='font-size: 24px; margin: 0;'>{message['content']}</p>",
@@ -333,7 +334,8 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 continued_response = extract_agent_responses(continued_result)
         
             if continued_response:
-                st.markdown(continued_response)
+                st.markdown(f"<div style='font-size: 24px;'>{continued_response}</div>",
+                            unsafe_allow_html=True)
                 with st.spinner("HopeBot is speaking 💬..."):
                         audio_file = text_to_speech(continued_response)
                 autoplay_audio(audio_file)
@@ -468,7 +470,8 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         'type': 'agent'
                     })
 
-                    st.markdown(agent_message)
+                    st.markdown(f"<div style='font-size: 24px;'>{agent_message}</div>",
+                                unsafe_allow_html=True)
                 
                 except Exception as e:
                     print(f"DEBUG AGENT ERROR: {e}")
