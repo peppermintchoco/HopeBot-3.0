@@ -322,7 +322,7 @@ if audio_bytes:
 if st.session_state.messages[-1]["role"] != "assistant":
 
     if st.session_state.get("agent_ran"):
-        with st.chat_message("assistant", avatar="🤖"):
+        with st.chat_message("assistant", avatar="🩺 "):
             with st.spinner("Thinking 🤔..."):
                 continued_messages = [
                     HumanMessage(content=m["content"]) 
@@ -348,7 +348,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
 
     # Otherwise HopeBot handles it
     else:
-        with st.chat_message("assistant", avatar="🤖"):
+        with st.chat_message("assistant", avatar="🩺 "):
             # Step 1: HopeBot generates response
             with st.spinner("Thinking 🤔..."):
                 responses, openai_messages = get_assistant_response(st.session_state.messages)
