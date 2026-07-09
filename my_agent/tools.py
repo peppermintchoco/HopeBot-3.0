@@ -376,9 +376,19 @@ def psychoeducation(recipient: str, assessment_type: str, severity: str) -> str:
     """Return relevant mental health psychoeducational content from a predefined dictionary as a guide 
     tailored to the needs of the user based on the mental health assessment taken and the severity level."""
     
-    content = PSYCHOEDUCATION_CONTENT.get(assessment_type, {}).get(severity)
+    assessment_content = PSYCHOEDUCATION_CONTENT.get(assessment_type, {})
+
+    content = assessment_content.get(severity)
+
     if not content:
-        return "No psychoeducational content available for this combination."
+        for key in assessment_content:
+            if key.lower() == severity.lower():
+                content = assessment_content[key]
+                break
+
+    if not content:
+        return f"No psychoeducational content available for this {assessment_type} - {severity}."
+    
     return str(content)
 
 # Tool 4: Pre-appointment preparation function
