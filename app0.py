@@ -239,6 +239,16 @@ def build_score_summary():
         lines.append(f"Question {i}: {category_labels[cat]} ({score} point)")
     
     lines.append(f"\nYou scored {st.session_state.total_phq9_score} points on the PHQ-9.")
+
+    # Q9 safety message
+    q9_category = st.session_state.answers_record[8]
+
+    if q9_category in ["B", "C", "D"]:
+        lines.append(
+            "\nYour response to Question 9 suggests you may be experiencing thoughts of self-harm or suicide. "
+            "You don't have to face this alone — please reach out for support. "
+            "You can contact the Samaritans at any time on 116 123 (free, 24/7) or by email at jo@samaritans.org."
+        )
     
     return "<br>".join(lines)
 
