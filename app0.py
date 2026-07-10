@@ -141,7 +141,6 @@ def get_assistant_response(messages):
     # Build progress context
     recorded = st.session_state.recorded_question_numbers
     pending = [q for q in range(1, 10) if q not in recorded]
-    print(f"DEBUG progress tracker - recorded: {recorded}, pending: {pending}")
 
     if pending:
         next_required = min(pending)
@@ -178,10 +177,6 @@ def get_assistant_response(messages):
 
 def extract_agent_responses(agent_results):
     messages = agent_results['messages']
-
-    # Debug
-    for msg in messages:
-        print(f"DEBUG agent msg type: {type(msg).__name__}, content: {str(msg.content)[:100]}")
 
     for message in reversed(messages):
         if hasattr(message, 'content') and message.content:
@@ -294,7 +289,12 @@ with footer_container:
 
 # History block
 for message in st.session_state.messages:
-    with st.chat_message(message["role"], avatar="🤖" if message["role"] == "assistant" else "🤗"):
+    if message["role"] == "assistant":
+        avatar = "⭐" if message.get("type") == "agent" else "🤖"
+    else:
+        avatar = "🤗"
+
+    with st.chat_message(message["role"], avatar = avatar):
         if message.get("type") == "agent":
             st.markdown(f"<div style='font-size: 24px;'>{message['content']}</div>",
                         unsafe_allow_html=True)
@@ -305,7 +305,7 @@ for message in st.session_state.messages:
             )
 
 # (1) Input from user
-typed_input = st.chat_input("Type your message here, or use the microphone.")
+typed_input = st.chat_input("Type your message here.")
 user_message_parts = []
 
 if typed_input and typed_input.strip():
@@ -332,7 +332,7 @@ if audio_bytes:
 if st.session_state.messages[-1]["role"] != "assistant":
 
     if st.session_state.get("agent_ran"):
-        with st.chat_message("assistant", avatar="🩺 "):
+        with st.chat_message("assistant", avatar="⭐"):
             with st.spinner("Thinking 🤔..."):
                 continued_messages = [
                     HumanMessage(content=m["content"]) 
@@ -358,7 +358,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
 
     # Otherwise HopeBot handles it
     else:
-        with st.chat_message("assistant", avatar="🩺 "):
+        with st.chat_message("assistant", avatar="⭐"):
             # Step 1: HopeBot generates response
             with st.spinner("Thinking 🤔..."):
                 responses, openai_messages = get_assistant_response(st.session_state.messages)
@@ -380,10 +380,6 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     st.session_state.answers_record.append(data['answer_category'])
                     st.session_state.total_phq9_score += int(data['score'])
                     st.session_state.phq9_scores_by_question.append(data["score"])
-
-                    print(f"DEBUG RECORDED: Q{q_num} = {data['answer_category']} ({data['score']})")
-                else:
-                    print(f"DEBUG DUPLICATE IGNORED: Q{q_num} already recorded")
             
                 if data.get('inferred'):
                     st.session_state.inferred_answers.append(q_num)
@@ -417,10 +413,6 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     tool_choice="none"
                 )
 
-                # Add these temporarily
-                print(f"DEBUG follow_up content: '{follow_up.choices[0].message.content}'")
-                print(f"DEBUG follow_up tool_calls: {follow_up.choices[0].message.tool_calls}")
-
                 display_messages = follow_up.choices[0].message.content or ""
             
             # Display HopeBot response
@@ -440,10 +432,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     "type": "hopebot"})
             
             # Agent fires immediately after, appends its own message
-            print(f"DEBUG before agent check: len={len(st.session_state.answers_record)}, agent_ran={st.session_state.agent_ran}")
-
             if phq9_complete() and not st.session_state.get("agent_ran"):
-                print(f"DEBUG: AGENT FIRING")
                 
                 try:
                     summary_text = build_score_summary()
@@ -460,17 +449,10 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         "assessment_type": "PHQ-9",
                         "question_9": st.session_state.phq9_scores_by_question[8]
                     }
-
-                    # Debug Code
-                    print(f"DEBUG screening_data: {screening_data}")
                     
                     agent_results = run_pipeline(screening_data)
                     
-                    print(f"DEBUG agent_results keys: {agent_results.keys()}")
-                    
                     agent_message = extract_agent_responses(agent_results)
-                    
-                    print(f"DEBUG agent_message preview: '{agent_message[:100]}'")
                     
                     st.session_state.agent_results = agent_results
                     st.session_state.agent_ran = True
@@ -484,12 +466,9 @@ if st.session_state.messages[-1]["role"] != "assistant":
                                 unsafe_allow_html=True)
                 
                 except Exception as e:
-                    print(f"DEBUG AGENT ERROR: {e}")
                     import traceback
                     traceback.print_exc()
                     st.error(f"Agent error: {e}")
-            else:
-                print(f"DEBUG: agent NOT firing - len={len(st.session_state.answers_record)}, agent_ran={st.session_state.get('agent_ran')}")
 
 # Floating microphone button
 footer_container.float("bottom: 0rem;")
