@@ -16,14 +16,14 @@ import openai
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain_core.messages import HumanMessage, AIMessage
-# import pysqlite3 as sqlite3
+import pysqlite3 as sqlite3
 
 from my_agent.agent import run_pipeline, app
 
 # --------------------------------------------------------------------------------------------------------------------------logic2END
 
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
-# sys.modules["sqlite3"] = sqlite3
+sys.modules["sqlite3"] = sqlite3
 load_dotenv()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
