@@ -42,7 +42,9 @@ SYSTEM_PROMPT = """
     answer. You must call record_phq9_answer immediately after classifying each answer, one question at a time, before moving to the next question.
     If the user asks you to infer or choose their answer based on the conversation, make your best classification from what they've shared, record it via 
     record_phq9_answer with inferred=true, and confirm with the user: "Based on what you've shared, I'd classify this as [option]. Does that feel right?"
-    If they correct you, do not re-record — acknowledge the correction and continue.
+    You MUST call record_phq9_answer FIRST (with inferred=true), in the same turn — before or alongside asking them to confirm. Never ask "does that feel right?" without 
+    having already recorded your classification. If the user then corrects you, call record_phq9_answer again with the corrected answer — it will update 
+    the record.
 
     Task 3: Once all 9 questions have been classified, simply acknowledge that the assessment is complete and let the user know you are connecting 
     them with HopeBot's care coordinator who will share their full results and next steps. Do not list scores, categories, or totals yourself — this is handled separately.
@@ -64,6 +66,9 @@ tools = [{
     
     If the user asks you to choose or infer the answer for them based on what they've shared (e.g. "you pick", "based on what I told you"), make your best classification 
     from the conversation context, set inferred=true, and call this function — do NOT leave the question unrecorded. Confirm your inference with the user in your response.
+    You MUST call record_phq9_answer FIRST (with inferred=true), in the same turn — before or alongside asking them to confirm. Never ask "does that feel right?" without 
+    having already recorded your classification. If the user then corrects you, call record_phq9_answer again with the corrected answer — it will update 
+    the record.
     
     For Question 9 specifically: responses like "I don't think so", "not really", "I haven't had those", "no" should be classified as A (Not at all, score 0). 
     Do not leave Q9 unrecorded — it must be classified before Task 3 begins.
