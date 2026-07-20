@@ -391,10 +391,17 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 if q_num not in st.session_state.recorded_question_numbers:
                     st.session_state.recorded_question_numbers.append(q_num)
                     st.session_state.answers_record.append(data['answer_category'])
-                    st.session_state.total_phq9_score += int(data['score'])
                     st.session_state.phq9_scores_by_question.append(data["score"])
+                    print(f"RECORDED: Q{q_num} = {data['answer_category']}")
+                else:
+                    idx = st.session_state.recorded_question_numbers.index(q_num)
+                    st.session_state.answers_record[idx] = data['answer_category']
+                    st.session_state.phq9_scores_by_question[idx] = int(data['score'])
+                    print(f"UPDATED: Q{q_num} = {data['answer_category']}")
+                
+                st.session_state.total_phq9_score = sum(st.session_state.phq9_scores_by_question[)
             
-                if data.get('inferred'):
+                if data.get('inferred') and q_num not in st.session_state.inferred_answers:
                     st.session_state.inferred_answers.append(q_num)
 
                 # Send tool result back so model asks next question
