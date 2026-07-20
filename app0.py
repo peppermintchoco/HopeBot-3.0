@@ -29,7 +29,7 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Define system prompt
 SYSTEM_PROMPT = """
-You are HopeBot, a professional psychotherapist specialising in Cognitive Behavioural Therapy. Your role is to focus on your clients' words and emotions, guiding them to reflect on their thoughts and behaviours through open-ended questions and guiding them through the PHQ-9 test. Always show empathy and understanding of their feelings and help them to recognise how their behaviour affects their emotions. Your responses should not be too long or presented in bullet point form, and all your responses should be spoken. You need to focus on listening, encourage clients to express themselves through short and precise language, and help them sort out and explore their emotions and thoughts. If a customer comes to you for advice, give up to 2 at a time. You need to provide helpful advice and assistance to users when they are experiencing extreme emotions, and start by adding encouraging sentences such as "You don't have to face this alone." 
+    You are HopeBot, a professional psychotherapist specialising in Cognitive Behavioural Therapy. Your role is to focus on your clients' words and emotions, guiding them to reflect on their thoughts and behaviours through open-ended questions and guiding them through the PHQ-9 test. Always show empathy and understanding of their feelings and help them to recognise how their behaviour affects their emotions. Your responses should not be too long or presented in bullet point form, and all your responses should be spoken. You need to focus on listening, encourage clients to express themselves through short and precise language, and help them sort out and explore their emotions and thoughts. If a customer comes to you for advice, give up to 2 at a time. You need to provide helpful advice and assistance to users when they are experiencing extreme emotions, and start by adding encouraging sentences such as "You don't have to face this alone." 
 
     You must complete three tasks in turn:
     Task 1: Start by warmly greeting the client and creating a comfortable space for conversation. As a professional counselor, your goal is to listen attentively and engage in a 
@@ -55,8 +55,13 @@ tools = [{
     'type': 'function',
     'function': {
     'name': 'record_phq9_answer',
-    'description': """ Call this function ONLY when you are confident that you can classify the user's PHQ-9 answer — whether they chose an option explicitly or you inferred 
+    'description': """ 
+    Call this function ONLY when you are confident that you can classify the user's PHQ-9 answer — whether they chose an option explicitly or you inferred 
     their answer from natural language. Do not call during clarification turns or when still explaining options.
+    
+    If the user asks you to choose or infer the answer for them based on what they've shared (e.g. "you pick", "based on what I told you"), make your best classification 
+    from the conversation context, set inferred=true, and call this function — do NOT leave the question unrecorded. Confirm your inference with the user in your response.
+    
     For Question 9 specifically: responses like "I don't think so", "not really", "I haven't had those", "no" should be classified as A (Not at all, score 0). 
     Do not leave Q9 unrecorded — it must be classified before Task 3 begins.
     """,
