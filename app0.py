@@ -399,7 +399,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     st.session_state.phq9_scores_by_question[idx] = int(data['score'])
                     print(f"UPDATED: Q{q_num} = {data['answer_category']}")
                 
-                st.session_state.total_phq9_score = sum(st.session_state.phq9_scores_by_question[)
+                st.session_state.total_phq9_score = sum(st.session_state.phq9_scores_by_question)
             
                 if data.get('inferred') and q_num not in st.session_state.inferred_answers:
                     st.session_state.inferred_answers.append(q_num)
