@@ -280,6 +280,8 @@ def initialize_session_state():
         st.session_state.phq9_scores_by_question = []
     if "recorded_question_numbers" not in st.session_state:
         st.session_state.recorded_question_numbers = []
+    if "awaiting_confirmation" not in st.session_state:
+        st.session_state.awaiting_confirmation = False
 
 initialize_session_state()
 
@@ -400,9 +402,14 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     print(f"UPDATED: Q{q_num} = {data['answer_category']}")
                 
                 st.session_state.total_phq9_score = sum(st.session_state.phq9_scores_by_question)
-            
+
                 if data.get('inferred') and q_num not in st.session_state.inferred_answers:
                     st.session_state.inferred_answers.append(q_num)
+            
+                if data.get('inferred'):
+                    st.session_state.awaiting_confirmation = True
+                else:
+                    st.session_state.awaiting_confirmation = False
 
                 # Send tool result back so model asks next question
                 tool_result_messages = openai_messages + [
@@ -435,6 +442,9 @@ if st.session_state.messages[-1]["role"] != "assistant":
 
                 display_messages = follow_up.choices[0].message.content or ""
             
+            if not message.tool_calls:
+                st.session_state.awaiting_confirmation = False
+            
             # Display HopeBot response
             if display_messages:
                 with st.spinner("HopeBot is speaking 💬..."):
@@ -452,7 +462,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     "type": "hopebot"})
             
             # Agent fires immediately after, appends its own message
-            if phq9_complete() and not st.session_state.get("agent_ran"):
+            if phq9_complete() and not st.session_state.get("agent_ran") and not st.session_state.get('awaiting_confirmation'):
                 
                 try:
                     summary_text = build_score_summary()
