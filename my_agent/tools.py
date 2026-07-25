@@ -393,13 +393,18 @@ def psychoeducation(recipient: str, assessment_type: str, severity: str) -> str:
 
 # Tool 4: Pre-appointment preparation function
 SESSION_PREPARATION = {
+    "GENERAL": {
+        "title": 'General session preparation',
+        "preparation": ,
+        "resources":
+    },
     "PRE": {
         "title": "Preparing for your first session",
         "preparation": ['Think about and write down your reasons for seeking therapy and what you hope to achieve', 'Prepare any questions you have about the therapy approach and process', 'Jot down notes or reflect beforehand', 'Check practical details before the session (location, time, what to bring)', 'Try to set realistic expectations.', 'Understand the type of therapy you are getting.'],
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     },
     "ONGOING": {
-        "title": "How to prepare for your therapy session.",
+        "title": "How to prepare right before your therapy session.",
         "preparation": ["Share how you are feeling right at the start", "Be open and honest about what is working and what isn't", "Focus on what matetrs most to you."],
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     },
@@ -411,12 +416,12 @@ SESSION_PREPARATION = {
 }
 
 @tool
-def session_prep(recipient: str, therapy_stage: str = "PRE") -> str:
+def session_prep(recipient: str, therapy_stage: str = "GENERAL") -> str:
     """Prepare therapy session preparation material for the user pulled from a structured resource bank based on the user's current stafe in their therapy journey."""
-    
+
     content = SESSION_PREPARATION.get(therapy_stage, {})
 
-    if not content:
+    if not content: 
         return "No relevant session preparation material is avaailable for this combination"
     
     return str(content)
