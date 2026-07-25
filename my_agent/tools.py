@@ -396,7 +396,7 @@ SESSION_PREPARATION = {
     "GENERAL": {
         "title": 'General session preparation',
         "preparation": ,
-        "resources":
+        "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     },
     "PRE": {
         "title": "Preparing for your first session",
@@ -404,12 +404,12 @@ SESSION_PREPARATION = {
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     },
     "ONGOING": {
-        "title": "How to prepare right before your therapy session.",
+        "title": "Preparing for your therapy session",
         "preparation": ["Share how you are feeling right at the start", "Be open and honest about what is working and what isn't", "Focus on what matetrs most to you."],
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     },
     "BETWEEN": {
-        "title": "How to prepare between therapy sessions.",
+        "title": "Making the most of time between therapy sessions",
         "preparation": ["Complete any tasks or exercises agreed with your therapist.", "Write down important thoughts, feelings or situations that come up between sessions.", "Try to attend all appointments and be on time", "Keep your therapist updated on any changes in your health or circumstances.", "Try to set and maintain realistic expectations for therapy."],
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     }

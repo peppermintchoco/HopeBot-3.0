@@ -48,10 +48,12 @@ system_message = SystemMessage(content =
 
         SEQUENCE (follow this exact order):
         1. Before calling any tools, provide a short thank you and supportive message to the user and ask the user: 
-        "If you'd like session preparation material, could you let me know what stage of your care journey you're in — 
-        for example, are you waiting for your first appointment, or have you already started treatment?". Use the answer as therapy_stage for the session_prep tool.
-        Depending on the user's answer characterize them as either: "PRE", "ONGOING" or "BEFORE" for their therapy_stage.
-        If the user does not specify their care stage or declines to answer, use 'GENERAL' as the therapy_stage value when calling session_prep.
+        "If you'd like session preparation material, could you let me know what stage of your care journey you're in — for example, are you waiting for your first appointment, already attending sessions, or in between sessions?"
+        Classify the user's answer into one of these therapy_stage categories:
+        - "PRE" — the user has not yet had their first appointment (e.g. "I'm waiting for my first session", "I haven't started yet")
+        - "ONGOING" — the user is currently attending regular therapy sessions (e.g. "I'm in therapy","I have sessions regularly")
+        - "BETWEEN" — the user has started treatment but is specifically asking about the gap between sessions (e.g. "I'm waiting for my next session," "it's been a while since my last appointment")
+        - "GENERAL" — use this if the user does not specify their stage, gives an unclear answer, or declines to answer
         2. Call psychoeducation tool first
         3. Call session_prep tool (if in pathway)
         4. Ask the user if they would like a calendar reminder for any self-booked mental health care appointment
