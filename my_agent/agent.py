@@ -96,9 +96,17 @@ system_message = SystemMessage(content =
         Do NOT sign off on intermediate messages such as confirmations, follow-up questions, or brief responses like "I've sent the email". 
         These should end naturally without a sign-off.
 
+        CRISIS/EMERGENCY PATHWAY:
+        - If the Pathway is "emergency", this indicates the user may be experiencing thoughts of self-harm or suicide.
+        - Prioritise safety: acknowledge the user's distress with care and without judgement.
+        - Provide immediate UK crisis resources (e.g. Samaritans: 116 123, or NHS 111) prominently in your response, before any other content.
+        - Do NOT proceed with routine scheduling questions (e.g. calendar reminders) in this pathway.
+        - Still call the assigned tools (send_email, psychoeducation) to ensure the user receives psychoeducational content and a summary, but frame the response around immediate safety and support first.
+        - Strongly encourage the user to seek immediate professional help or contact emergency services if in immediate danger.
+
         NOTE: Send only one email per conversation. 
         - Gather all content from tools first, and send a single comprehensive email that includes everything — assessment results, psychoeducation, session preparation, and any calendar attachments.
-        - Do NOT reintroduce yourself as HopeBot but intorduce yourself as the mental health care coordinator
+        - Do NOT reintroduce yourself as HopeBot but introduce yourself as the mental health care coordinator
         """)
 
 # ====== NODE FUNCTIONS ======
@@ -142,6 +150,7 @@ CUTOFFS = {
 }
 
 def triage_function(score, assessment):
+    # For PHQ-9/GAD-7: score is numeric, mapped to severity via CUTOFFS
     if assessment in CUTOFFS:
         for threshold, label in CUTOFFS[assessment]:
             if score < threshold:
@@ -149,6 +158,7 @@ def triage_function(score, assessment):
                 break
         triage_category = TRIAGE_MAP[severity]
     else:
+        # For MDQ: score is a pre-classified string ("Positive"/"Negative") passed 
         severity = score
         triage_category = severity
     return {'severity': severity, 'triage_category': triage_category}
@@ -212,6 +222,8 @@ def run_pipeline(screening_data: dict):
 
     IMPORTANT: When calling the psychoeducation tool, use assessment_type="{assessment}" 
     and severity="{severity}" (NOT the triage category).
+
+    {"NOTE: The user indicated some level of thoughts of self-harm on question 9 of the PHQ-9 (Pathway: emergency). This overrides the general severity/triage category shown above — follow the CRISIS/EMERGENCY PATHWAY instructions in your system prompt, prioritising safety resources and support, regardless of the overall severity score." if routing_dict['pathway'] == 'emergency' else ""}
 
     Based on the above triage, respond to the patient and use the available tools to coordinate their care.
     """
