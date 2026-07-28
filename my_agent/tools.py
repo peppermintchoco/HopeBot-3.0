@@ -395,22 +395,37 @@ def psychoeducation(recipient: str, assessment_type: str, severity: str) -> str:
 SESSION_PREPARATION = {
     "GENERAL": {
         "title": 'General session preparation',
-        "preparation": ,
+        "preparation": ["Reflect on what you'd like to get out of your mental health care overall",
+                        "Consider keeping note of anything on your mind, so it's easier to bring up when needed",
+                        "Try to be open and honest — sessions tend to be most helpful when you feel able to share freely",
+                        "Be patient with the process; progress in therapy isn't always linear"],
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     },
     "PRE": {
         "title": "Preparing for your first session",
-        "preparation": ['Think about and write down your reasons for seeking therapy and what you hope to achieve', 'Prepare any questions you have about the therapy approach and process', 'Jot down notes or reflect beforehand', 'Check practical details before the session (location, time, what to bring)', 'Try to set realistic expectations.', 'Understand the type of therapy you are getting.'],
-        "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
+        "preparation": ["Think about and write down your reasons for seeking therapy and what you hope to achieve", 
+                        "Prepare any questions you have about the therapy approach and process", 
+                        "Jot down notes or reflect beforehand", 
+                        "Check practical details before the session (location, time, what to bring)", 
+                        "Understand that meaningful change often takes time and multiple sessions - keep this in mind when setting your therapy goals", 
+                        "Ask your therapist or care provider about the type of therapy you'll be receiving, if you are unsure"],
+        "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions", "Mind UK Seeking help for a mental health problem: https://www.mind.org.uk/information-support/guides-to-support-and-services/seeking-help-for-a-mental-health-problem/where-to-start/"]
     },
     "ONGOING": {
         "title": "Preparing for your therapy session",
-        "preparation": ["Share how you are feeling right at the start", "Be open and honest about what is working and what isn't", "Focus on what matetrs most to you."],
+        "preparation": ["Share how you are feeling right at the start", 
+                        "If a technique or approach isn't working for you, be open and honest about it - so that your therapist can adjust their approach based on your feedback", 
+                        "Focus on what matters most to you during the session",
+                        "Consider anything that's changed since your last session, and whether you'd like to raise it"],
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     },
     "BETWEEN": {
         "title": "Making the most of time between therapy sessions",
-        "preparation": ["Complete any tasks or exercises agreed with your therapist.", "Write down important thoughts, feelings or situations that come up between sessions.", "Try to attend all appointments and be on time", "Keep your therapist updated on any changes in your health or circumstances.", "Try to set and maintain realistic expectations for therapy."],
+        "preparation": ["Complete any tasks or exercises agreed with your therapist", 
+                        "Write down important thoughts, feelings or situations that come up between sessions", 
+                        "Try to be consistent with attending appointments and practise any coping strategies or techniques discussed in your last session.", 
+                        "Keep your therapist updated on any changes in your health or circumstances", 
+                        "Remember that progress isn't always visible session-to-session - small shifts often add up over time"],
         "resources": ["Mind UK How to get the most of therapy: https://www.mind.org.uk/information-support/drugs-and-treatments/talking-therapy-and-counselling/getting-the-most-from-therapy/#TipsForAllTypesOfTherapySessions"]
     }
 }
