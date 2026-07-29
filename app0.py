@@ -16,14 +16,14 @@ import openai
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain_core.messages import HumanMessage, AIMessage
-import pysqlite3 as sqlite3
+# import pysqlite3 as sqlite3
 
 from my_agent.agent import run_pipeline, app
 
 # --------------------------------------------------------------------------------------------------------------------------logic2END
 
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
-sys.modules["sqlite3"] = sqlite3
+# sys.modules["sqlite3"] = sqlite3
 load_dotenv()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -262,10 +262,10 @@ def build_score_summary():
 
 # 初始化会话状态
 def initialize_session_state():
+    if "participant_id" not in st.session_state:
+        st.session_state.participant_id = None
     if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "assistant", "content": "This is HopeBot, your mental health assistant. It's good to hear from you, how are you doing today? 😊"}
-        ]
+        st.session_state.messages = [{"role": "assistant", "content": "Before we begin, could you please enter your Participant ID (e.g. P01)?"}]
     if "total_phq9_score" not in st.session_state:
         st.session_state.total_phq9_score = 0
     if "answers_record" not in st.session_state:
@@ -344,8 +344,19 @@ if audio_bytes:
             st.rerun()
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------
-if st.session_state.messages[-1]["role"] != "assistant":
+# Conversation loop
+if st.session_state.participant_id is None:
+    if st.session_state.messages[-1]["role"] == "user":
+        st.session_state.participant_id =st.session_state.messages[-1]["content"].strip()
 
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": "Thank you! Let's get started - how are you doing today? 😊"
+        })
+        st.rerun()
+
+# Main conversation loop - runs once participant_id is captured
+elif st.session_state.messages[-1]["role"] != "assistant":
     if st.session_state.get("agent_ran"):
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Thinking 🤔..."):
@@ -355,7 +366,12 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     else AIMessage(content=m["content"])
                     for m in st.session_state.messages
                 ]
-                continued_result = app.invoke({"messages": continued_messages})
+                continued_result = app.invoke(
+                    {"messages": continued_messages},
+                    config = {
+                        "metadata": {"participant_id": st.session_state.participant_id},
+                        "tags": [f"participant-{st.session_state.participant_id}"]
+                        })
                 continued_response = extract_agent_responses(continued_result)
         
             if continued_response:
@@ -480,7 +496,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         "question_9": st.session_state.phq9_scores_by_question[8]
                     }
                     
-                    agent_results = run_pipeline(screening_data)
+                    agent_results = run_pipeline(screening_data, participant_id = st.session_state.participant_id)
                     
                     agent_message = extract_agent_responses(agent_results)
                     

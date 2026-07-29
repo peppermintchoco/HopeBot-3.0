@@ -188,7 +188,7 @@ def route_by_severity(assessment: str, triage_category: str, q9: int) -> dict:
             return {"pathway": "minimal", "tools": ["send_email"]}
 
 # ====== RESPONSE CHAIN PATHWAY ======
-def run_pipeline(screening_data: dict):
+def run_pipeline(screening_data: dict, participant_id: str):
     # Step 1: Extract what we need from the screening data
     # score, assessment type, q9, patient info etc.
     score = screening_data['score']
@@ -231,7 +231,11 @@ def run_pipeline(screening_data: dict):
     """
 
     # Step 5: Invoke the executor with the enriched input
-    result = app.invoke({"messages": [HumanMessage(content = enriched_input)]})
+    result = app.invoke({"messages": [HumanMessage(content = enriched_input)]},
+                        config = {
+                            "metadata": {"participant_id": participant_id},
+                            "tags": [f"participant-{participant_id}"]
+                        })
     
     # Step 6: Return the agent's response
     return result
