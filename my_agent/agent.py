@@ -103,7 +103,7 @@ system_message = SystemMessage(content =
         - Prioritise safety: acknowledge the user's distress with care and without judgement.
         - Provide immediate UK crisis resources (e.g. Samaritans: 116 123, or NHS 111) prominently in your response, before any other content.
         - Do NOT proceed with routine scheduling questions (e.g. calendar reminders) in this pathway.
-        - Still call the assigned tools (send_email, psychoeducation) to ensure the user receives psychoeducational content and a summary, but frame the response around immediate safety and support first.
+        - Still call all tools assigned based on the underlying severity/triage routing (e.g. psychoeducation, session preparation, email) to ensure the user receives complete, relevant content, but frame the response around immediate safety and support first.
         - Strongly encourage the user to seek immediate professional help or contact emergency services if in immediate danger.
 
         NOTE: Send only one email per conversation. 
@@ -167,25 +167,27 @@ def triage_function(score, assessment):
 
 # ====== ROUTING LOGIC ======
 def route_by_severity(assessment: str, triage_category: str, q9: int) -> dict:
-    # Safety override — non-zero Q9 always escalates regardless of score
-    # Return emergency pathway with crisis-specific tools
-    if q9 > 0:
-        return {"pathway": 'emergency', "tools": ["send_email", "psychoeducation"]}
-
     if assessment == 'PHQ-9' or assessment == 'GAD-7':
     # For score-based assessments (PHQ-9, GAD-7):
         if triage_category == "Minimal":
-            return {"pathway": "minimal", "tools": ["send_email"]}
+            base_pathway, base_tools = "minimal", ["send_email"]
         elif triage_category == 'Mild':
-            return {"pathway": "mild", "tools": ["send_email", "psychoeducation"]}
+            base_pathway, base_tools = "mild", ["send_email", "psychoeducation"]
         else:
-            return {"pathway": "clinical", "tools": ["send_email", "psychoeducation", "session_prep"]}
+            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep"]
     else:
     # For binary assessments (MDQ):
         if triage_category == 'Positive':
-            return {"pathway": "clinical", "tools": ["send_email", "psychoeducation", "session_prep"]}
-        if triage_category == 'Negative':
-            return {"pathway": "minimal", "tools": ["send_email"]}
+            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep"]
+        else:
+            base_pathway, base_tools = "minimal", ["send_email"]
+    
+    # Safety override — non-zero Q9 always escalates regardless of score
+    # Return emergency pathway with crisis-specific tools
+    if q9 > 0:
+        return {"pathway": 'emergency', "tools": list(set(base_tools + ["send_email", "psychoeducation"]))}
+    
+    return {"pathway": base_pathway, "tools": base_tools}
 
 # ====== RESPONSE CHAIN PATHWAY ======
 def run_pipeline(screening_data: dict, participant_id: str):
