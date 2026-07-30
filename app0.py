@@ -24,7 +24,6 @@ from my_agent.agent import run_pipeline, app
 
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
 sys.modules["sqlite3"] = sqlite3
-load_dotenv()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Define system prompt

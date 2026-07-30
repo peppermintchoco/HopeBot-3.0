@@ -10,8 +10,37 @@ from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.prebuilt import ToolNode
 from langchain_core.messages import HumanMessage, SystemMessage
 
-# Get the API key
-api_key = os.getenv('OPENAI_API_KEY')
+# Function to load for the neccessary configurations
+def load_config():
+    try:
+        import streamlit as st
+        return {
+            'OPENAI_API_KEY': st.secrets.get('OPENAI_API_KEY'),
+            'LANGCHAIN_TRACING_V2': st.secrets.get('LANGCHAIN_TRACING_V2', 'false'),
+            'LANGCHAIN_API_KEY': st.secrets.get('LANGCHAIN_API_KEY'),
+            'LANGCHAIN_PROJECT': st.secrets.get('LANGCHAIN_PROJECT'),
+            'GMAIL_ADDRESS': st.secrets.get('GMAIL_ADDRESS'),
+            'GMAIL_APP_PASSWORD': st.secrets.get('GMAIL_APP_PASSWORD'),
+        }
+    except Exception:
+        from dotenv import load_dotenv
+        load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+        return {
+            'OPENAI_API_KEY': os.getenv('OPENAI_API_KEY'),
+            'LANGCHAIN_TRACING_V2': os.getenv('LANGCHAIN_TRACING_V2', 'false'),
+            'LANGCHAIN_API_KEY': os.getenv('LANGCHAIN_API_KEY'),
+            'LANGCHAIN_PROJECT': os.getenv('LANGCHAIN_PROJECT'),
+            'GMAIL_ADDRESS': os.getenv('GMAIL_ADDRESS'),
+            'GMAIL_APP_PASSWORD': os.getenv('GMAIL_APP_PASSWORD'),
+        }
+
+config = load_config()
+os.environ['LANGCHAIN_TRACING_V2'] = config['LANGCHAIN_TRACING_V2']
+os.environ['LANGCHAIN_API_KEY'] = config['LANGCHAIN_API_KEY'] or ''
+os.environ['LANGCHAIN_PROJECT'] = config['LANGCHAIN_PROJECT'] or ''
+
+# Get API key
+api_key = config['OPENAI_API_KEY']
 
 # Check if the API key loaded
 if api_key:
