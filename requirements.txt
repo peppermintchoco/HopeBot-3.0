@@ -7,7 +7,7 @@ langchain-core
 langgraph
 langgraph-prebuilt
 chromadb
-# pysqlite3-binary
+pysqlite3-binary
 audio-recorder-streamlit
 streamlit-float
 streamlit-chat
