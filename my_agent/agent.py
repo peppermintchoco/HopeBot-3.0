@@ -5,12 +5,11 @@ load_dotenv(dotenv_path = os.path.join(os.path.dirname(__file__), '.env'))
 from my_agent.tools import send_email, psychoeducation, session_prep, calendar_input
 
 from langchain_openai import ChatOpenAI
-
 from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.prebuilt import ToolNode
 from langchain_core.messages import HumanMessage, SystemMessage
 
-# Function to load for the neccessary configurations
+# Function to load for the neccessary
 def load_config():
     try:
         import streamlit as st
@@ -54,7 +53,7 @@ model = 'gpt-4o'
 llm = ChatOpenAI(
     model = model,
     temperature = 0.3,
-    api_key = os.getenv('OPENAI_API_KEY')
+    api_key = api_key
 )
 
 # Bind tools to LLM
