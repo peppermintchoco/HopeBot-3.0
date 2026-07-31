@@ -34,6 +34,7 @@ def load_config():
         }
 
 config = load_config()
+os.environ['OPENAI_API_KEY'] = config['OPENAI_API_KEY'] or ''
 os.environ['LANGCHAIN_TRACING_V2'] = config['LANGCHAIN_TRACING_V2']
 os.environ['LANGCHAIN_API_KEY'] = config['LANGCHAIN_API_KEY'] or ''
 os.environ['LANGCHAIN_PROJECT'] = config['LANGCHAIN_PROJECT'] or ''
