@@ -284,6 +284,15 @@ def initialize_session_state():
 
 initialize_session_state()
 
+# ===== TEMPORARY DEBUG DISPLAY =====
+st.write("🐛 DEBUG - Recorded question numbers:", st.session_state.recorded_question_numbers)
+st.write("🐛 DEBUG - Answers record:", st.session_state.answers_record)
+st.write("🐛 DEBUG - Number of answers recorded:", len(st.session_state.answers_record))
+st.write("🐛 DEBUG - PHQ-9 complete?:", phq9_complete())
+st.write("🐛 DEBUG - Agent ran?:", st.session_state.get("agent_ran"))
+st.write("🐛 DEBUG - Awaiting confirmation?:", st.session_state.get("awaiting_confirmation"))
+# ===== END DEBUG DISPLAY =====
+
 # 标题
 st.title("HopeBot: Your Mental Health Assistant 🤖")
 
