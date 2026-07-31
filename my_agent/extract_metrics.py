@@ -8,7 +8,7 @@ import pandas as pd
 client = Client()
 
 # ===== TASK COMPLETION (tool runs) =====
-tool_runs = client.list_runs(project_name = "hopebot-3-0-dev-testing", run_type = "tool")
+tool_runs = client.list_runs(project_name = "hopebot-3-0-phase1-pilot", run_type = "tool")
 
 tool_results = []
 
