@@ -493,13 +493,14 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 
                 try:
                     summary_text = build_score_summary()
-                    display_text(summary_text)
 
-                    st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": summary_text
-                    })
-                    
+                    with st.chat_message("assistant", avatar="🤖"):
+                        display_text(summary_text)
+                        st.session_state.messages.append({
+                            "role": "assistant", 
+                            "content": summary_text
+                            })
+
                     screening_data = {
                         "email": None,
                         "score": st.session_state.total_phq9_score,
@@ -508,8 +509,10 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     }
                     
                     agent_results = run_pipeline(screening_data, participant_id = st.session_state.participant_id)
-                    
                     agent_message = extract_agent_responses(agent_results)
+
+                    with st.chat_message("assistant", avatar="⭐"):
+                        st.markdown(f"<div style='font-size: 24px;'>{agent_message}</div>", unsafe_allow_html=True)
                     
                     st.session_state.agent_results = agent_results
                     st.session_state.agent_ran = True
@@ -518,9 +521,6 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                         'content': agent_message,
                         'type': 'agent'
                     })
-
-                    st.markdown(f"<div style='font-size: 24px;'>{agent_message}</div>",
-                                unsafe_allow_html=True)
                 
                 except Exception as e:
                     import traceback
