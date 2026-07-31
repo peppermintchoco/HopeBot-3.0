@@ -76,7 +76,7 @@ system_message = SystemMessage(content =
         - If a user requests a tool not assigned by their triage, use your judgement — provide it if it supports their wellbeing, but do not offer clinical-level tools to users triaged as minimal without explaining why a professional referral may not be indicated at this stage
 
         SEQUENCE (follow this exact order):
-        1. Before calling any tools, provide a short thank you and supportive message to the user and ask the user: 
+        1. 1. If session_prep is included in the Available Tools list, before calling any tools, provide a short thank you and supportive message to the user and ask: 
         "If you'd like session preparation material, could you let me know what stage of your care journey you're in — for example, are you waiting for your first appointment, already attending sessions, or in between sessions?"
         Classify the user's answer into one of these therapy_stage categories:
         - "PRE" — the user has not yet had their first appointment (e.g. "I'm waiting for my first session", "I haven't started yet")
@@ -84,7 +84,8 @@ system_message = SystemMessage(content =
         - "BETWEEN" — the user has started treatment but is specifically asking about the gap between sessions (e.g. "I'm waiting for my next session," "it's been a while since my last appointment")
         - "GENERAL" — use this if the user does not specify their stage, gives an unclear answer, or declines to answer
         2. Call psychoeducation tool first
-        3. Call session_prep tool (if in pathway)
+        3. 3. Call session_prep tool ONLY if "Session Preparation" appears in the Available Tools list provided in your context. 
+        Do not call this tool otherwise, even if you have already asked about the user's therapy stage.
         4. Ask the user if they would like a calendar reminder for any self-booked mental health care appointment
         5. If yes, call calendar_input tool to generate the .ics file
         6. Call send_email LAST — only after ALL content tools and calendar (if requested) have been called
