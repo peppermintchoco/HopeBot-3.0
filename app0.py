@@ -259,6 +259,12 @@ def build_score_summary():
     
     return "<br>".join(lines)
 
+# Function to trigger when phq-9 assessment is completed
+PHQ9_TOTAL_QUESTIONS = 9
+
+def phq9_complete():
+    return len(st.session_state.answers_record) == PHQ9_TOTAL_QUESTIONS
+
 # 初始化会话状态
 def initialize_session_state():
     if "participant_id" not in st.session_state:
@@ -295,12 +301,6 @@ st.write("🐛 DEBUG - Awaiting confirmation?:", st.session_state.get("awaiting_
 
 # 标题
 st.title("HopeBot: Your Mental Health Assistant 🤖")
-
-# Function to trigger when phq-9 assessment is completed
-PHQ9_TOTAL_QUESTIONS = 9
-
-def phq9_complete():
-    return len(st.session_state.answers_record) == PHQ9_TOTAL_QUESTIONS
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
