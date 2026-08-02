@@ -290,6 +290,8 @@ def initialize_session_state():
         st.session_state.recorded_question_numbers = []
     if "awaiting_confirmation" not in st.session_state:
         st.session_state.awaiting_confirmation = False
+    if "closing_check" not in st.session_state:
+        st.session_state.closing_check = False
 
 initialize_session_state()
 
@@ -359,7 +361,29 @@ if st.session_state.participant_id is None:
 
 # Main conversation loop - runs once participant_id is captured
 elif st.session_state.messages[-1]["role"] != "assistant":
-    if st.session_state.get("agent_ran"):
+    user_message = st.session_state.messages[-1]["content"].strip().lower()
+    if st.session_state.get("agent_ran") and "end" in user_message.split() and not st.session_state.closing_check:
+        survey_link = "https://forms.cloud.microsoft/e/H5jHLrApqF"
+        researcher_email = "rachel.lau.25@ucl.ac.uk"
+
+        closing_message = (
+            f"Thank you for completing the PHQ-9 with me today. I hope the information "
+            f"and resources shared have been helpful.\n\n"
+            f"Please remember that support is always available. You can reach the "
+            f"Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org. "
+            f"To complete the study, please fill out the self-assessed PHQ-9 and feedback "
+            f"survey here: {survey_link}. Your participant ID is {st.session_state.participant_id}.\nIf you have any issues, please contact the "
+            f"researcher at {researcher_email}.\n\n"
+            f"Take care. I'm here if you'd like to keep talking. 🌿\n\nWarm regards,\nHopeBot" 
+        )
+        
+        st.session_state.closing_check = True
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": closing_message,
+            "type": "hopebot"
+        })
+    elif st.session_state.get("agent_ran"):
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Thinking 🤔..."):
                 continued_messages = [
