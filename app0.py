@@ -370,13 +370,13 @@ elif st.session_state.messages[-1]["role"] != "assistant":
 
         closing_message = (
             f"Thank you for completing the PHQ-9 with me today. I hope the information "
-            f"and resources shared have been helpful.\n\n"
-            f"Please remember that support is always available.\n\nYou can reach the "
-            f"Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org.\n\n"
+            f"and resources shared have been helpful.<br>"
+            f"Please remember that support is always available.<br><br>You can reach the "
+            f"Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org.<br><br>"
             f"To complete the study, please fill out the self-assessed PHQ-9 and feedback "
-            f"survey here: {survey_link}.\nYour participant ID is {st.session_state.participant_id}.\nIf you have any issues, please contact the "
-            f"researcher at {researcher_email}.\n\n"
-            f"Take care. I'm here if you'd like to keep talking.🌿\n\nWarm regards,\nHopeBot" 
+            f"survey here: <a href='{survey_link}'>{survey_link}</a>.<br>Your participant ID is {st.session_state.participant_id}.<br>If you have any issues, please contact the "
+            f"researcher at {researcher_email}.<br><br>"
+            f"Take care. I'm here if you'd like to keep talking.🌿<br><br>Warm regards,<br>HopeBot" 
         )
         
         st.session_state.closing_check = True
@@ -385,6 +385,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
             "content": closing_message,
             "type": "hopebot"
         })
+        st.rerun()
     elif st.session_state.get("agent_ran"):
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Thinking 🤔..."):
