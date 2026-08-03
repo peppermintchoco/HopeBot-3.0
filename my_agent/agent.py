@@ -41,10 +41,6 @@ llm = ChatOpenAI(
     api_key = api_key
 )
 
-# Bind tools to LLM
-llm_with_tools = llm.bind_tools([send_email, psychoeducation, session_prep, calendar_input])
-
-
 # Create a prompt for mental health coordination
 system_message = SystemMessage(content = 
         """
@@ -135,7 +131,7 @@ system_message = SystemMessage(content =
         - Do NOT reintroduce yourself as HopeBot but introduce yourself as the mental health care coordinator
         """)
 
-TOOL_REGISTRY = {
+TOOL_DISPLAY_NAMES= {
     "send_email": "Email",
     "psychoeducation": "Psychoeducation",
     "session_prep": "Session Preparation",
@@ -152,6 +148,13 @@ def should_continue(state: MessagesState):
 
 # ===== BUILD THE GRAPH ======
 def build_agent(allowed_tool_names):
+    TOOL_REGISTRY = {
+    "send_email": send_email,
+    "psychoeducation": psychoeducation,
+    "session_prep": session_prep,
+    "calendar_input": calendar_input,
+    }
+
     tools = [TOOL_REGISTRY[name] for name in allowed_tool_names]
     llm_scoped = llm.bind_tools(tools)
 
@@ -248,7 +251,7 @@ def run_pipeline(screening_data: dict, participant_id: str):
     Severity: {severity}
     Triage Category: {triage_category}
     Pathway: {routing_dict['pathway']}
-    Available Tools: {', '.join(TOOL_REGISTRY[t] for t in routing_dict['tools'])}
+    Available Tools: {', '.join(TOOL_DISPLAY_NAMES[t] for t in routing_dict['tools'])}
 
     IMPORTANT: When calling the psychoeducation tool, use assessment_type="{assessment}" 
     and severity="{severity}" (NOT the triage category).

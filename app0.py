@@ -324,7 +324,18 @@ for message in st.session_state.messages:
 
 footer_container = st.container()
 with footer_container:
-    audio_bytes = audio_recorder(energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate = 30000)
+    col1, col2 = st.columns([1, 18])
+    with col1:
+        audio_bytes = audio_recorder(
+            text = "",
+            icon_size = "1x",
+            icon_name="microphone",
+            energy_threshold=(-1, 0.5),
+            pause_threshold=30,
+            sample_rate = 30000)
+    with col2:
+        st.markdown("<p style='font-size: 15px; color: #0a0a0a; margin: 0;'>Click the microphone to record your answer</p>",
+                unsafe_allow_html=True)
 
 typed_input = st.chat_input("Type your message here.")
 user_message_parts = []
@@ -547,5 +558,5 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     st.error(f"Agent error: {e}")
 
 # Floating microphone button
-footer_container.float("bottom: 7rem; z-index: 9999;")
+footer_container.float("bottom: 1rem; z-index: 9999;")
 
