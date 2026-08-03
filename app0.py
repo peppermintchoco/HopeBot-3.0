@@ -543,5 +543,5 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     st.error(f"Agent error: {e}")
 
 # Floating microphone button
-footer_container.float("bottom: 0rem;")
+footer_container.float("bottom: 5rem; z-index: 9999;")
 
