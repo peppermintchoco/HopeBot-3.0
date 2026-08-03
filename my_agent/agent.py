@@ -13,31 +13,20 @@ from langchain_core.messages import HumanMessage, SystemMessage
 def load_config():
     try:
         import streamlit as st
-        return {
-            'OPENAI_API_KEY': st.secrets.get('OPENAI_API_KEY'),
-            'LANGCHAIN_TRACING_V2': st.secrets.get('LANGCHAIN_TRACING_V2', 'false'),
-            'LANGCHAIN_API_KEY': st.secrets.get('LANGCHAIN_API_KEY'),
-            'LANGCHAIN_PROJECT': st.secrets.get('LANGCHAIN_PROJECT'),
-            'GMAIL_ADDRESS': st.secrets.get('GMAIL_ADDRESS'),
-            'GMAIL_APP_PASSWORD': st.secrets.get('GMAIL_APP_PASSWORD'),
-        }
+        for key in ['OPENAI_API_KEY', 'LANGCHAIN_TRACING_V2', 'LANGCHAIN_API_KEY', 'LANGCHAIN_PROJECT', 'GMAIL_ADDRESS', 'GMAIL_APP_PASSWORD']:
+            val = st.secrets.get(key)
+            if val:
+                os.environ[key] = str(val)
     except Exception:
-        from dotenv import load_dotenv
-        load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
-        return {
-            'OPENAI_API_KEY': os.getenv('OPENAI_API_KEY'),
-            'LANGCHAIN_TRACING_V2': os.getenv('LANGCHAIN_TRACING_V2', 'false'),
-            'LANGCHAIN_API_KEY': os.getenv('LANGCHAIN_API_KEY'),
-            'LANGCHAIN_PROJECT': os.getenv('LANGCHAIN_PROJECT'),
-            'GMAIL_ADDRESS': os.getenv('GMAIL_ADDRESS'),
-            'GMAIL_APP_PASSWORD': os.getenv('GMAIL_APP_PASSWORD'),
-        }
+        pass
 
 config = load_config()
 os.environ['OPENAI_API_KEY'] = config['OPENAI_API_KEY'] or ''
 os.environ['LANGCHAIN_TRACING_V2'] = config['LANGCHAIN_TRACING_V2']
 os.environ['LANGCHAIN_API_KEY'] = config['LANGCHAIN_API_KEY'] or ''
 os.environ['LANGCHAIN_PROJECT'] = config['LANGCHAIN_PROJECT'] or ''
+
+print(f"[DEBUG] TRACING: {os.getenv('LANGCHAIN_TRACING_V2')}, PROJECT: {os.getenv('LANGCHAIN_PROJECT')}, KEY SET: {bool(os.getenv('LANGCHAIN_API_KEY'))}")
 
 # Get API key
 api_key = config['OPENAI_API_KEY']
