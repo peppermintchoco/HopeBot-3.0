@@ -299,12 +299,6 @@ initialize_session_state()
 st.title("HopeBot: Your Mental Health Assistant 🤖")
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------
-
-# 浮动容器（用于麦克风）
-footer_container = st.container()
-with footer_container:
-    audio_bytes = audio_recorder(energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate = 30000)
-
 # History block
 for message in st.session_state.messages:
     if message["role"] == "assistant":
@@ -322,7 +316,10 @@ for message in st.session_state.messages:
                 unsafe_allow_html=True
             )
 
-# (1) Input from user
+footer_container = st.container()
+with footer_container:
+    audio_bytes = audio_recorder(energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate = 30000)
+
 typed_input = st.chat_input("Type your message here.")
 user_message_parts = []
 
