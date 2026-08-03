@@ -24,7 +24,7 @@ from my_agent.agent import run_pipeline, app
 
 st.set_page_config(page_title="HopeBot: Your Mental Health Assistant", layout="wide")
 # sys.modules["sqlite3"] = sqlite3
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_key = st.secrets.get("OPENAI_API_KEY")
 
 # Define system prompt
 SYSTEM_PROMPT = """
@@ -170,7 +170,7 @@ def get_assistant_response(messages):
         """
     else:
         progress_note = f"\n\nPHQ-9 PROGRESS TRACKER: All 9 questions recorded. Proceed to Task 3."
- 
+
     # Manually inject context into system prompt
     system_prompt = SYSTEM_PROMPT.replace("{context}", combined_context) + progress_note
 
@@ -299,6 +299,8 @@ initialize_session_state()
 st.title("HopeBot: Your Mental Health Assistant 🤖")
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------
+float_init()
+
 # History block
 for message in st.session_state.messages:
     if message["role"] == "assistant":
@@ -539,5 +541,5 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     st.error(f"Agent error: {e}")
 
 # Floating microphone button
-# footer_container.float("bottom: 5rem; z-index: 9999;")
+footer_container.float("bottom: 7rem; z-index: 9999;")
 

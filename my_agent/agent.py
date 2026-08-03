@@ -23,8 +23,6 @@ def load_config():
 
 config = load_config()
 
-print(f"[DEBUG] TRACING: {os.getenv('LANGCHAIN_TRACING_V2')}, PROJECT: {os.getenv('LANGCHAIN_PROJECT')}, KEY SET: {bool(os.getenv('LANGCHAIN_API_KEY'))}")
-
 # Get API key
 api_key = os.getenv('OPENAI_API_KEY')
 
