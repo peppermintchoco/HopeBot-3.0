@@ -369,12 +369,12 @@ elif st.session_state.messages[-1]["role"] != "assistant":
         closing_message = (
             f"Thank you for completing the PHQ-9 with me today. I hope the information "
             f"and resources shared have been helpful.\n\n"
-            f"Please remember that support is always available. You can reach the "
-            f"Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org. "
+            f"Please remember that support is always available.\n\nYou can reach the "
+            f"Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org.\n\n"
             f"To complete the study, please fill out the self-assessed PHQ-9 and feedback "
-            f"survey here: {survey_link}. Your participant ID is {st.session_state.participant_id}.\nIf you have any issues, please contact the "
+            f"survey here: {survey_link}.\nYour participant ID is {st.session_state.participant_id}.\nIf you have any issues, please contact the "
             f"researcher at {researcher_email}.\n\n"
-            f"Take care. I'm here if you'd like to keep talking. 🌿\n\nWarm regards,\nHopeBot" 
+            f"Take care. I'm here if you'd like to keep talking.🌿\n\nWarm regards,\nHopeBot" 
         )
         
         st.session_state.closing_check = True
