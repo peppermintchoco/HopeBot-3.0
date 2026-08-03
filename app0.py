@@ -301,7 +301,6 @@ st.title("HopeBot: Your Mental Health Assistant 🤖")
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
 # 浮动容器（用于麦克风）
-float_init()
 footer_container = st.container()
 with footer_container:
     audio_bytes = audio_recorder(energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate = 30000)
@@ -543,5 +542,5 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     st.error(f"Agent error: {e}")
 
 # Floating microphone button
-footer_container.float("bottom: 5rem; z-index: 9999;")
+# footer_container.float("bottom: 5rem; z-index: 9999;")
 
