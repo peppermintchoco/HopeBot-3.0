@@ -56,8 +56,9 @@ system_message = SystemMessage(content =
         - Use only tool-provided content.
         - Ensure you use the tools assigned based on the triage. 
         - Let users know that a calendar function is available and offer to add appointments to their calendar if they request it. 
-        - At the end of your first response to the user, always offer to send them a calendar reminder for a follow-up appointment. Ask if they would like one and if so, what date and time works for them.
-        - If a user requests a tool not assigned by their triage, use your judgement — provide it if it supports their wellbeing, but do not offer clinical-level tools to users triaged as minimal without explaining why a professional referral may not be indicated at this stage
+        - Ask the user whether they have an upcoming mental health appointment they would like to add to their calendar.
+        - Call the calendar_input ONLY if the user provides a date and a time. NEVER infer, assume, or invent an appointment date.
+        - If the user says they have an appointment but does not give the date, ask for it. If they decline or have no appointment, do not call calendar_input and do not mention a calendar file.
 
         SEQUENCE (follow this exact order):
         1. 1. If session_prep is included in the Available Tools list, before calling any tools, provide a short thank you and supportive message to the user and ask: 
@@ -201,17 +202,17 @@ def route_by_severity(assessment: str, triage_category: str, q9: int) -> dict:
     if assessment == 'PHQ-9' or assessment == 'GAD-7':
     # For score-based assessments (PHQ-9, GAD-7):
         if triage_category == "Minimal":
-            base_pathway, base_tools = "minimal", ["send_email"]
+            base_pathway, base_tools = "minimal", ["send_email", "calendar_input"]
         elif triage_category == 'Mild':
-            base_pathway, base_tools = "mild", ["send_email", "psychoeducation"]
+            base_pathway, base_tools = "mild", ["send_email", "psychoeducation", "calendar_input"]
         else:
-            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep"]
+            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep", "calendar_input"]
     else:
     # For binary assessments (MDQ):
         if triage_category == 'Positive':
-            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep"]
+            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep", "calendar_input"]
         else:
-            base_pathway, base_tools = "minimal", ["send_email"]
+            base_pathway, base_tools = "minimal", ["send_email", "calendar_input"]
     
     # Safety override — non-zero Q9 always escalates regardless of score
     # Return emergency pathway with crisis-specific tools

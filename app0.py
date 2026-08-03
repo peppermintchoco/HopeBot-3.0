@@ -18,7 +18,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.messages import HumanMessage, AIMessage
 # import pysqlite3 as sqlite3
 
-from my_agent.agent import run_pipeline, app
+from my_agent.agent import run_pipeline
 
 # --------------------------------------------------------------------------------------------------------------------------logic2END
 
@@ -395,7 +395,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     else AIMessage(content=m["content"])
                     for m in st.session_state.messages
                 ]
-                continued_result = app.invoke(
+                continued_result = st.session_state.agent_app.invoke(
                     {"messages": continued_messages},
                     config = {
                         "metadata": {"participant_id": st.session_state.participant_id},
@@ -526,7 +526,8 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                         "question_9": st.session_state.phq9_scores_by_question[8]
                     }
                     
-                    agent_results = run_pipeline(screening_data, participant_id = st.session_state.participant_id)
+                    agent_results, agent_app = run_pipeline(screening_data, participant_id = st.session_state.participant_id)
+                    st.session_state.agent_app = agent_app
                     agent_message = extract_agent_responses(agent_results)
 
                     with st.chat_message("assistant", avatar="⭐"):
