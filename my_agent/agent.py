@@ -72,8 +72,8 @@ system_message = SystemMessage(content =
         Do not call this tool otherwise, even if you have already asked about the user's therapy stage.
         4. Ask the user if they would like a calendar reminder for any self-booked mental health care appointment
         5. If yes, call calendar_input tool to generate the .ics file
-        6. Call send_email LAST — only after ALL content tools and calendar (if requested) have been called
-        7. ONLY THEN present the full summary to the user in chat
+        6. Call send_email LAST — only after ALL content tools and calendar (if requested) have been called and if the user's provide their email address.
+        7. ONLY THEN present the full summary to the user in chat. This applies whether or not the user has provided an email address — the chat summary must always contain the complete content, not a recap of what was emailed.
 
         TOOL USAGE:
         - You MUST call psychoeducation and session_prep tools BEFORE generating any chat response
@@ -94,7 +94,8 @@ system_message = SystemMessage(content =
             4. Self-Care Tips
             5. Recommended Interventions
             6. Psychoeducational resources with clickable links
-            7. Session Preparation (if applicable)
+            7. Session Preparation - include this section only if the session_prep tool was calledd and returned content.
+                - If session_prep was not called, omit this section entriely. NEVER write the session prep content yourself.
             8. Disclaimer
         - The email should serve as a complete summary the user can refer back to.
         - Address the user warmly without requiring their name. 
@@ -133,14 +134,14 @@ system_message = SystemMessage(content =
         - Do NOT reintroduce yourself as HopeBot but introduce yourself as the mental health care coordinator
         """)
 
+TOOL_REGISTRY = {
+    "send_email": "Email",
+    "psychoeducation": "Psychoeducation",
+    "session_prep": "Session Preparation",
+    "calendar_input": "Calendar" 
+    }
+
 # ====== NODE FUNCTIONS ======
-def agent_node(state: MessagesState):
-    messages = [system_message] + state["messages"]
-    response = llm_with_tools.invoke(messages)
-    return {"messages": [response]}
-
-tool_node = ToolNode([send_email, psychoeducation, session_prep, calendar_input])
-
 # Routing function: check if agent called a tool
 def should_continue(state: MessagesState):
     last_message = state['messages'][-1]
@@ -149,15 +150,23 @@ def should_continue(state: MessagesState):
     return END
 
 # ===== BUILD THE GRAPH ======
-graph = StateGraph(MessagesState)
-graph.add_node("agent", agent_node)
-graph.add_node("tools", tool_node)
+def build_agent(allowed_tool_names):
+    tools = [TOOL_REGISTRY[name] for name in allowed_tool_names]
+    llm_scoped = llm.bind_tools(tools)
 
-graph.add_edge(START, "agent")
-graph.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
-graph.add_edge("tools", "agent")
+    def agent_node(state: MessagesState):
+        messages = [system_message] + state["messages"]
+        return {"messages": [llm_scoped.invoke(messages)]}
 
-app = graph.compile()
+    graph = StateGraph(MessagesState)
+    graph.add_node("agent", agent_node)
+    graph.add_node("tools", ToolNode(tools))
+
+    graph.add_edge(START, "agent")
+    graph.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
+    graph.add_edge("tools", "agent")
+    
+    return graph.compile()
 
 # ======= TRIAGE CHAIN =======
 TRIAGE_MAP = {
@@ -226,17 +235,11 @@ def run_pipeline(screening_data: dict, participant_id: str):
 
     # Step 3: Route — call route_by_severity to get pathway and tool list
     routing_dict = route_by_severity(assessment, triage_category, q9)
+    agent_app = build_agent(routing_dict['tools'])
     
     # Step 4: Build the enriched input for the agent
     # Include: patient name, assessment type, score, severity, triage category, pathway, and which tools are available
     # This is a formatted string that gives the LLM all the context it needs without it having to figure any of the clinical logic out itself
-    TOOL_DISPLAY_NAMES = {
-    "send_email": "Email",
-    "psychoeducation": "Psychoeducation",
-    "session_prep": "Session Preparation",
-    "calendar_input": "Calendar" 
-    }
-    
     enriched_input = f"""
     Email: {screening_data.get('email', 'Not provided')}
     Assessment: {assessment}
@@ -244,7 +247,7 @@ def run_pipeline(screening_data: dict, participant_id: str):
     Severity: {severity}
     Triage Category: {triage_category}
     Pathway: {routing_dict['pathway']}
-    Available Tools: {', '.join(TOOL_DISPLAY_NAMES[t] for t in routing_dict['tools'])}
+    Available Tools: {', '.join(TOOL_REGISTRY[t] for t in routing_dict['tools'])}
 
     IMPORTANT: When calling the psychoeducation tool, use assessment_type="{assessment}" 
     and severity="{severity}" (NOT the triage category).
@@ -255,11 +258,11 @@ def run_pipeline(screening_data: dict, participant_id: str):
     """
 
     # Step 5: Invoke the executor with the enriched input
-    result = app.invoke({"messages": [HumanMessage(content = enriched_input)]},
-                        config = {
-                            "metadata": {"participant_id": participant_id},
-                            "tags": [f"participant-{participant_id}"]
-                        })
+    result = agent_app.invoke(
+        {"messages": [HumanMessage(content = enriched_input)]},
+        config = {
+            "metadata": {"participant_id": participant_id},
+            "tags": [f"participant-{participant_id}"]})
     
     # Step 6: Return the agent's response
-    return result
+    return result, agent_app
