@@ -36,23 +36,26 @@ SYSTEM_PROMPT = """
     If they indicate that they have nothing else to share, or if the dialogue reaches about 20 exchanges, you must smoothly transition to introducing the PHQ-9 questionnaire and 
     ask the user if they would like to take the PHQ-9 test. When doing this, acknowledge and validate what the client has shared so far, emphasizing how valuable their input has been.
     
-    Task 2: After the user agrees to use the PHQ-9, ask each question in turn - ensure to include the question and the possible responses (Not at all, Several days, More than half the days, Nearly every day). 
+    Task 2: 
+    - After the user agrees to use the PHQ-9, let them know that they can ask you to clarify any question if they are unsure what it means. 
+    - Then ask each question in turn.
+    - Always ensure to include the question and the possible responses (Not at all, Several days, More than half the days, Nearly every day). 
     - Accurately categorise the user's answers as options A, B, C or D using record_phq9_answer. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, ask the user to provide a clearer 
     answer. You must call record_phq9_answer immediately after classifying each answer, one question at a time, before moving to the next question.
     - If the user's answer requires interpretation to map onto an option — including approximate or non-standard phrasings such as "a few times", "maybe 3/4 times", or "once or twice" — 
     treat this as an inferred classification and call record_phq9_answer with inferred=true.
     - If the user asks you to infer or choose their answer based on the conversation, do the same: make your best classification from what they've shared and record it via record_phq9_answer with inferred=true.
     - In both cases, you MUST call record_phq9_answer FIRST (with inferred=true), in the same turn — before or alongside asking them to confirm.  
-    If the user then corrects you, call record_phq9_answer again with the corrected answer; it will update the record.
-    - For Question 9 specifically, confirmation is mandatory whenever the answer was inferred. 
-    Record the classification, then confirm before proceeding: "Based on what you've shared, I'd classify this as [option]. Does that feel right?" 
-    Do not advance to the next question or to Task 3 until the user has confirmed.
+    - If the user then corrects you, call record_phq9_answer again with the corrected answer; it will update the record.
+    - Confirmation is required whenever the answer was inferred EXPECIALLY for Question 9.
+    - Record the classification, then confirm before proceeding: "Based on what you've shared, I'd classify this as [option]. Does that feel right?" 
+    - Do not advance to the next question or to Task 3 until the user has confirmed.
     - If the user asks a clarifying question about any PHQ-9 question before giving their actual answer (e.g. "what does this mean", "any examples", "what kind of thoughts"), 
     provide clarification and wait for their actual answer. Do NOT proceed to the next question, Task 3, or any language suggesting a handoff to the care coordinator until record_phq9_answer has been successfully called for the current question.
     - Under no circumstances should the conversation advance to Task 3 or reference connecting the user to the care coordinator without record_phq9_answer having been called for Question 9 specifically.
 
-    Task 3: Once all 9 questions have been classified, simply acknowledge that the assessment is complete and let the user know you are connecting 
-    them with HopeBot's care coordinator who will share their full results and next steps. Do not list scores, categories, or totals yourself — this is handled separately.
+    Task 3: Once all 9 questions have been classified, simply acknowledge that the assessment is complete and et the user know you are connecting them with HopeBot's care coordinator, who will share their full results and next steps.
+    Do not list scores, categories, or totals yourself — this is handled separately.
 
     IMPORTANT: Do NOT use bullet points, numbered lists, headers, or any markdown formatting in your responses — write in natural spoken prose only.
 
@@ -203,11 +206,9 @@ def extract_agent_responses(agent_results):
     return ""
 
 def display_text(content):
-    formatted = content.replace("\n", "<br>")
-    st.markdown(
-        f"<p style='font-size: 24px; margin: 0;'>{formatted}</p>",
-        unsafe_allow_html=True
-    )
+    lines = content.split("\n")
+    formatted = "<br>".join(f"<span style='font-size: 24px;'>{line}</span>" for line in lines)
+    st.markdown(f"<div style='font-size: 24px; margin: 0;'>{formatted}</div>", unsafe_allow_html=True)
 
 # 语音识别功能
 def speech_to_text(audio_path):
@@ -296,6 +297,10 @@ def initialize_session_state():
         st.session_state.awaiting_confirmation = False
     if "closing_check" not in st.session_state:
         st.session_state.closing_check = False
+    if "read_aloud_enabled" not in st.session_state:
+        st.session_state.read_aloud_enabled = True
+    if "play_greeting" not in st.session_state:
+        st.session_state.play_greeting = False
 
 initialize_session_state()
 
@@ -303,6 +308,11 @@ initialize_session_state()
 st.title("HopeBot: Your Mental Health Assistant 🤖")
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------
+voice_label = "Turn off voice" if st.session_state.read_aloud_enabled else "Turn on voice"
+if st.button(voice_label, key="voice_reply_toggle"):
+    st.session_state.read_aloud_enabled = not st.session_state.read_aloud_enabled
+    st.rerun()
+
 float_init()
 
 # History block
@@ -322,9 +332,15 @@ for message in st.session_state.messages:
                 unsafe_allow_html=True
             )
 
+if st.session_state.play_greeting and st.session_state.read_aloud_enabled:
+    audio_file = text_to_speech("Thank you! Let's get started - how are you doing today?")
+    autoplay_audio(audio_file)
+    os.remove(audio_file)
+    st.session_state.play_greeting = False
+
 footer_container = st.container()
 with footer_container:
-    col1, col2 = st.columns([1, 18])
+    col1, col2 = st.columns([1, 12])
     with col1:
         audio_bytes = audio_recorder(
             text = "",
@@ -334,7 +350,7 @@ with footer_container:
             pause_threshold=30,
             sample_rate = 30000)
     with col2:
-        st.markdown("<p style='font-size: 15px; color: #0a0a0a; margin: 0;'>Click the microphone to record your answer</p>",
+        st.markdown("<p style='font-size: 15px; color: #0a0a0a; margin: 0; margin-left: -40px; '>Click the microphone to record your answer</p>",
                 unsafe_allow_html=True)
 
 typed_input = st.chat_input("Type your message here.")
@@ -366,12 +382,13 @@ if st.session_state.participant_id is None:
     if st.session_state.messages[-1]["role"] == "user":
         st.session_state.participant_id =st.session_state.messages[-1]["content"].strip()
 
+        greeting = "Thank you! Let's get started - how are you doing today? 😊"
         st.session_state.messages.append({
             "role": "assistant",
-            "content": "Thank you! Let's get started - how are you doing today? 😊"
+            "content": greeting
         })
+        st.session_state.play_greeting = True
         st.rerun()
-
 # Main conversation loop - runs once participant_id is captured
 elif st.session_state.messages[-1]["role"] != "assistant":
     user_message = st.session_state.messages[-1]["content"].strip().lower()
@@ -417,16 +434,16 @@ elif st.session_state.messages[-1]["role"] != "assistant":
             if continued_response:
                 st.markdown(f"<div style='font-size: 24px;'>{continued_response}</div>",
                             unsafe_allow_html=True)
-                with st.spinner("HopeBot is speaking 💬..."):
-                        audio_file = text_to_speech(continued_response)
-                autoplay_audio(audio_file)
-                os.remove(audio_file)
+                if st.session_state.read_aloud_enabled:
+                    with st.spinner("HopeBot is speaking 💬..."):
+                            audio_file = text_to_speech(continued_response)
+                    autoplay_audio(audio_file)
+                    os.remove(audio_file)
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": continued_response,
                     "type": 'agent'
                 })
-
     # Otherwise HopeBot handles it
     else:
         with st.chat_message("assistant", avatar="🤖"):
@@ -503,32 +520,30 @@ elif st.session_state.messages[-1]["role"] != "assistant":
             
             # Display HopeBot response
             if display_messages:
-                with st.spinner("HopeBot is speaking 💬..."):
-                    audio_file = text_to_speech(display_messages)  # Generate audio in advance
-
-                # Display text and play audio simultaneously
+                # Display text
                 display_text(display_messages)
-                autoplay_audio(audio_file)  # Play audio
-                os.remove(audio_file)
+
+                if st.session_state.read_aloud_enabled:
+                    with st.spinner("HopeBot is speaking 💬..."):
+                        audio_file = text_to_speech(display_messages)  # Generate audio in advance
+                    autoplay_audio(audio_file)  # Play audio
+                    os.remove(audio_file)
 
                 # Add response to session state
                 st.session_state.messages.append({
                     "role": "assistant", 
                     "content": display_messages,
                     "type": "hopebot"})
-            
             # Agent fires immediately after, appends its own message
             if phq9_complete() and not st.session_state.get("agent_ran") and not st.session_state.get('awaiting_confirmation'):
-                
                 try:
                     summary_text = build_score_summary()
-
                     with st.chat_message("assistant", avatar="🤖"):
                         display_text(summary_text)
-                        st.session_state.messages.append({
-                            "role": "assistant", 
-                            "content": summary_text
-                            })
+                    st.session_state.messages.append({
+                        "role": "assistant", 
+                        "content": summary_text
+                        })
 
                     screening_data = {
                         "email": None,
@@ -543,6 +558,12 @@ elif st.session_state.messages[-1]["role"] != "assistant":
 
                     with st.chat_message("assistant", avatar="⭐"):
                         st.markdown(f"<div style='font-size: 24px;'>{agent_message}</div>", unsafe_allow_html=True)
+
+                        if st.session_state.read_aloud_enabled:
+                            with st.spinner("HopeBot is speaking 💬..."):
+                                audio_file = text_to_speech(agent_message)
+                            autoplay_audio(audio_file)
+                            os.remove(audio_file)
                     
                     st.session_state.agent_results = agent_results
                     st.session_state.agent_ran = True
@@ -551,7 +572,6 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                         'content': agent_message,
                         'type': 'agent'
                     })
-                
                 except Exception as e:
                     import traceback
                     traceback.print_exc()
