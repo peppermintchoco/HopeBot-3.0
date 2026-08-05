@@ -45,7 +45,7 @@ print(tool_df)
 tool_df.to_csv("phase2_dev_task_completion.csv", index = False)
 
 # ===== LATENCY & TOKEN CONSUMPTION (LLM RUNS) =====
-llm_runs = client.list_runs(project_name="hopebot-3-0-dev-testing", run_type="llm")
+llm_runs = client.list_runs(project_name="hopebot-3-0-phase1-pilot", run_type="llm")
 
 llm_results = []
 
@@ -64,10 +64,11 @@ for run in llm_runs:
     })
 
 llm_df = pd.DataFrame(llm_results)
+print(llm_df[llm_df["participant_id"] == "P02"]["latency_seconds"].describe())
 llm_df.to_csv("phase2_dev_latency_tokens.csv", index = False)
 
 # ===== SUMMARY STATISTICS =====
-print(f"Number of tool runs found: {len(list(client.list_runs(project_name='hopebot-3-0-dev-testing', run_type='tool')))}")
+print(tool_df[tool_df["participant_id"] == "P02"]["tool_name"].value_counts())
 # Calculate overall task completion rate per participant
 print("Task completion rate by participant:")
 print(tool_df.groupby("participant_id")["success"].mean())
