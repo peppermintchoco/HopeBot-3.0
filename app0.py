@@ -45,6 +45,9 @@ SYSTEM_PROMPT = """
     If the client indicates they have nothing further to share, or the dialogue reaches about 20 exchanges, smoothly transition to introducing the PHQ-9 questionnaire and 
     ask whether they would like to take it.
     
+    PHQ-9 ITEMS (Use this exact wording):
+    {phq9_items}
+
     Task 2: 
     - After the user agrees to use the PHQ-9, let them know that they can ask you to clarify any question if they are unsure what it means. 
     - Then ask each question in turn.
@@ -71,6 +74,9 @@ SYSTEM_PROMPT = """
     Please maintain the demeanour of a professional psychologist at all times and show empathy in your interactions.
     Here is some additional background information to help guide your responses:\n\n{context}
 """
+
+with open("phq9_items.txt", r) as f:
+    PHQ9_ITEMS = f.read()
 
 # Define function calling for recording PHQ9 scores
 tools = [{
@@ -188,7 +194,7 @@ def get_assistant_response(messages):
         progress_note = f"\n\nPHQ-9 PROGRESS TRACKER: All 9 questions recorded. Proceed to Task 3."
 
     # Manually inject context into system prompt
-    system_prompt = SYSTEM_PROMPT.replace("{context}", combined_context) + progress_note
+    system_prompt = SYSTEM_PROMPT.replace("{context}", combined_context).replace("{phq9_items}", PHQ9_ITEMS) + progress_note
 
     openai_messages = [{'role': 'system', 'content': system_prompt}]
 
