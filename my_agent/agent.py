@@ -68,9 +68,10 @@ system_message = SystemMessage(content =
         3. 3. Call session_prep tool ONLY if "Session Preparation" appears in the Available Tools list provided in your context. 
         Do not call this tool otherwise, even if you have already asked about the user's therapy stage.
         4. Ask the user if they would like a calendar reminder for any self-booked mental health care appointment
-        5. If yes, call calendar_input tool to generate the .ics file
-        6. Call send_email LAST — only after ALL content tools and calendar (if requested) have been called and if the user's provide their email address.
-        7. ONLY THEN present the full summary to the user in chat. This applies whether or not the user has provided an email address — the chat summary must always contain the complete content, not a recap of what was emailed.
+        5. If yes, ask for the specific date and time of the appointment. Do NOT call calendar_input until the user has provided both a date and a time in their own words.
+        6. Once a specific date and time have been given, call calendar_input to generate the .ics file using exactly what the user provided. Never infer, estimate, or invent a date or time.
+        7. Call send_email LAST — only after ALL content tools and calendar (if requested) have been called and if the user's provide their email address.
+        8. ONLY THEN present the full summary to the user in chat. This applies whether or not the user has provided an email address — the chat summary must always contain the complete content, not a recap of what was emailed.
 
         TOOL USAGE:
         - You MUST call psychoeducation and session_prep tools BEFORE generating any chat response

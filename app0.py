@@ -355,27 +355,18 @@ if st.session_state.play_greeting and st.session_state.read_aloud_enabled:
     os.remove(audio_file)
     st.session_state.play_greeting = False
 
-footer_container = st.container()
-with footer_container:
-    col1, col2 = st.columns([1, 12])
-    with col1:
-        audio_bytes = audio_recorder(
-            text = "",
-            icon_size = "1x",
-            icon_name="microphone",
-            energy_threshold=(-1, 0.5),
-            pause_threshold=30,
-            sample_rate = 30000)
-    with col2:
-        st.markdown("<p style='font-size: 15px; color: #0a0a0a; margin: 0; margin-left: -40px; '>Click the microphone to record your answer</p>",
-                unsafe_allow_html=True)
-
 typed_input = st.chat_input("Type your message here.")
 user_message_parts = []
 
 if typed_input and typed_input.strip():
     st.session_state.messages.append({"role": "user", "content": typed_input})
     st.rerun()
+
+footer_container = st.container()
+with footer_container:
+    with footer_container:
+        audio_bytes = audio_recorder(text="Click to record", icon_size="1x", icon_name="microphone",
+                                     energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate=30000)
 
 if audio_bytes:
     if "last_audio" not in st.session_state or st.session_state.last_audio != audio_bytes:
@@ -593,7 +584,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     import traceback
                     traceback.print_exc()
                     st.error(f"Agent error: {e}")
-
+    
 # Floating microphone button
-footer_container.float("bottom: 1rem; z-index: 9999;")
+footer_container.float("bottom: 7rem; z-index: 9999;")
 
