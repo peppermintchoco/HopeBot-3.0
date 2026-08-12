@@ -264,9 +264,11 @@ def build_score_summary():
     }
 
     lines = ["Here's how each answer was interpreted:"]
-    for i, cat in enumerate(st.session_state.answers_record, 1):
+
+    for q_num in sorted(st.session_state.answers_record):
+        cat = st.session_state.answers_record[q_num]
         score = categories[cat]
-        lines.append(f"Question {i}: {category_labels[cat]} ({score} point)")
+        lines.append(f"Question {q_num}: {category_labels[cat]} ({score} point)")
     
     lines.append(f"\nYou scored {st.session_state.total_phq9_score} points on the PHQ-9.")
 
@@ -297,7 +299,7 @@ def initialize_session_state():
     if "total_phq9_score" not in st.session_state:
         st.session_state.total_phq9_score = 0
     if "answers_record" not in st.session_state:
-        st.session_state.answers_record = []  # e.g., ["A","B",...]
+        st.session_state.answers_record = {}
     if 'inferred_answers' not in st.session_state:
         st.session_state.inferred_answers = []
     if "agent_ran" not in st.session_state:
@@ -305,7 +307,7 @@ def initialize_session_state():
     if "agent_results" not in st.session_state:
         st.session_state.agent_results = None
     if "phq9_scores_by_question" not in st.session_state:
-        st.session_state.phq9_scores_by_question = []
+        st.session_state.phq9_scores_by_question = [0] * 9
     if "recorded_question_numbers" not in st.session_state:
         st.session_state.recorded_question_numbers = []
     if "awaiting_confirmation" not in st.session_state:
@@ -475,15 +477,14 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 # Only record if this question hasn't been recorded yet
                 if q_num not in st.session_state.recorded_question_numbers:
                     st.session_state.recorded_question_numbers.append(q_num)
-                    st.session_state.answers_record.append(data['answer_category'])
-                    st.session_state.phq9_scores_by_question.append(data["score"])
+                    st.session_state.answers_record[q_num] = data['answer_category']
+                    st.session_state.phq9_scores_by_question[q_num - 1] = data["score"]
                     print(f"RECORDED: Q{q_num} = {data['answer_category']}")
                 else:
-                    idx = st.session_state.recorded_question_numbers.index(q_num)
-                    st.session_state.answers_record[idx] = data['answer_category']
-                    st.session_state.phq9_scores_by_question[idx] = int(data['score'])
+                    st.session_state.answers_record[q_num] = data['answer_category']
+                    st.session_state.phq9_scores_by_question[q_num - 1] = data["score"]
                     print(f"UPDATED: Q{q_num} = {data['answer_category']}")
-                
+
                 st.session_state.total_phq9_score = sum(st.session_state.phq9_scores_by_question)
 
                 if data.get('inferred') and q_num not in st.session_state.inferred_answers:
