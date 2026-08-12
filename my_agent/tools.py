@@ -56,7 +56,12 @@ from icalendar import Calendar, Event
 
 @tool
 def calendar_input(recipient: str, appointment_datetime: datetime, session_name: str) -> str:
-    """Takes in appointment details and generates a .ics file for user to add to their calendar."""
+    """Takes in appointment details and creates a calendar (.ics) file for an upcoming appointment.
+    Only call this tool if the user has explicitly asked for a calendar reminder or 
+    appointment file AND has given a specific date and time in their own words in this 
+    conversation. Never infer, estimate, or invent a date or time. If the user asks for a 
+    reminder without giving a date, ask them for one and wait for their reply before calling 
+    this tool."""
     event = Event()
     calendar = Calendar()
 
