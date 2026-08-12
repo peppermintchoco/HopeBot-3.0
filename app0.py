@@ -100,7 +100,10 @@ tools = [{
     'parameters': {
         'type': 'object',
         'properties':{
-            'question_answer': {'type': 'integer'},
+            'question_num': {
+                'type': 'integer',
+                'description': 'The number of the PHQ-9 question being answered, from 1 to 9. This is the question position, not the score.'
+                },
             'answer_category': {
                 'type': 'string',
                 'enum': ['A', 'B', 'C', 'D'],
@@ -116,7 +119,7 @@ tools = [{
                 },
             'skipped': {'type': 'boolean'}
         },
-        'required': ['question_answer', 'answer_category', 'score', 'inferred']
+        'required': ['question_num', 'answer_category', 'score', 'inferred']
     }}
 }]
 
@@ -411,12 +414,12 @@ elif st.session_state.messages[-1]["role"] != "assistant":
         closing_message = (
             f"Thank you for completing the PHQ-9 with me today. I hope the information "
             f"and resources shared have been helpful.<br>"
-            f"Please remember that support is always available.<br><br>You can reach the "
-            f"Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org.<br><br>"
+            f"Please remember that support is always available.<br><br>"
             f"To complete the study, please fill out the self-assessed PHQ-9 and feedback "
             f"survey here: <a href='{survey_link}'>{survey_link}</a>.<br>Your participant ID is {st.session_state.participant_id}.<br>If you have any issues, please contact the "
             f"researcher at {researcher_email}.<br><br>"
-            f"Take care. I'm here if you'd like to keep talking.🌿<br><br>Warm regards,<br>HopeBot" 
+            f"If you need urgent mental health support, you can reach the Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org.<br><br>"
+            f"Take care. I'm here if you'd like to keep talking.🌿<br>Warm regards,<br>HopeBot" 
         )
         
         st.session_state.closing_check = True
@@ -470,9 +473,10 @@ elif st.session_state.messages[-1]["role"] != "assistant":
             display_messages = message.content or ""
             
             if message.tool_calls:
-                tool_call = message.tool_calls[0]
-                data = json.loads(tool_call.function.arguments)
-                q_num = data['question_answer']
+                for tool_call in message.tool_calls:
+                    data = json.loads(tool_call.function.arguments)
+                    print(f"DEBUG - keys: {list(data.keys())}")
+                    q_num = data['question_num']
 
                 # Only record if this question hasn't been recorded yet
                 if q_num not in st.session_state.recorded_question_numbers:

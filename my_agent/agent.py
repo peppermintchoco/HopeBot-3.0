@@ -88,7 +88,7 @@ system_message = SystemMessage(content =
         - The email must include all of the following:
             1. Assessment Summary (name, raw score, severity)
             2. What This Means
-            3. Crisis/safety resources (if Pathway is "emergency" — e.g. Samaritans: 116 123, NHS 111), presented prominently near the top
+            3. Crisis/safety resources: if Pathway is "emergency" (e.g. Samaritans: 116 123, NHS 111), presented prominently near the top
             4. Self-Care Tips
             5. Recommended Interventions
             6. Psychoeducational resources with clickable links
@@ -119,7 +119,8 @@ system_message = SystemMessage(content =
         CRISIS/EMERGENCY PATHWAY:
         - If the Pathway is "emergency", this indicates the user may be experiencing thoughts of self-harm or suicide.
         - Prioritise safety: acknowledge the user's distress with care and without judgement.
-        - Provide immediate UK crisis resources (e.g. Samaritans: 116 123, or NHS 111) prominently in your response, before any other content.
+        - Crisis resources (e.g. Samaritans: 116 123, or NHS 111) must appear FIRST in both the chat response and the email summary, before the assessment summary and any interpretation.
+        - Do NOT describe symptoms as mild, manageable, or normal in this pathway, regardless of total score. Omit reassuring framing about overall severity.
         - Still ask the therapy_stage question (Step 1) to ensure session preparation content is appropriately tailored, 
         but do NOT proceed with the calendar reminder question — this routine scheduling step should be skipped in this pathway to avoid adding logistics-related burden during a moment of distress.
         - Still call all tools assigned based on the underlying severity/triage routing (e.g. psychoeducation, session preparation, email) to ensure the user receives complete, relevant content, 

@@ -108,7 +108,7 @@ PSYCHOEDUCATION_CONTENT = {
     "Mild": {
         "title": "Understanding Your PHQ-9 Results",
         "explanation": "Your results suggest mild symptoms of depression.",
-        "what_this_means": "It is normal to experience some mild depressive symptoms. While it may cause some difficulty in daily activities, these symptoms are normally manageable and many people find improvement with small, proactive steps.",
+        "what_this_means": "Mild depressive symptoms are common and may cause some difficulty in daily activities. Many people find improvement with small, proactive steps, and support is available if symptoms persist or worsen.",
         "self_care_tips": {
             "Lifestyle": [
                 "Maintain regular sleep patterns",
