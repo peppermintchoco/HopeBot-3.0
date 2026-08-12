@@ -373,15 +373,18 @@ if audio_bytes:
         st.session_state.last_audio = audio_bytes
     with st.spinner("Transcribing..."):
         audio_path = "temp_audio.mp3"
-        with open(audio_path, "wb") as f:
-            f.write(audio_bytes)
-
-        transcript = speech_to_text(audio_path)
-        if transcript:
-            st.session_state.messages.append({"role": "user", "content": transcript})
-            display_text(transcript, colour = "#333333")
-            os.remove(audio_path)
-            st.rerun()
+        try:
+            with open(audio_path, "wb") as f:
+                f.write(audio_bytes)
+            transcript = speech_to_text(audio_path)
+            if transcript:
+                st.session_state.messages.append({"role": "user", "content": transcript})
+                display_text(transcript, colour = "#333333")
+                os.remove(audio_path)
+                st.rerun()
+        finally:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
                         
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 # Conversation loop

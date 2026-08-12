@@ -48,6 +48,9 @@ def send_email(recipient: str, subject: str, body: str, attachment_path:Optional
         server.login(gmail_address, gmail_password)
         server.send_message(message)
         server.quit()
+
+        if attachment_path and os.path.exists(attachment_path):
+            os.remove(attachment_path)
         
         return f"Email sent to {recipient} with subject: {subject}"
     except Exception as error:
