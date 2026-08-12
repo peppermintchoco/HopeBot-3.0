@@ -75,7 +75,7 @@ SYSTEM_PROMPT = """
     Here is some additional background information to help guide your responses:\n\n{context}
 """
 
-with open("phq9_items.txt", r) as f:
+with open("phq9_items.txt", "r") as f:
     PHQ9_ITEMS = f.read()
 
 # Define function calling for recording PHQ9 scores
@@ -220,9 +220,9 @@ def extract_agent_responses(agent_results):
             return message.content
     return ""
 
-def display_text(content):
+def display_text(content, colour = "#1A7E85FF"):
     lines = content.split("\n")
-    formatted = "<br>".join(f"<span style='font-size: 24px;'>{line}</span>" for line in lines)
+    formatted = "<br>".join(f"<span style='font-size: 24px; color: {colour}; '>{line}</span>" for line in lines)
     st.markdown(f"<div style='font-size: 24px; margin: 0;'>{formatted}</div>", unsafe_allow_html=True)
 
 # 语音识别功能
@@ -334,16 +334,18 @@ float_init()
 for message in st.session_state.messages:
     if message["role"] == "assistant":
         avatar = "⭐" if message.get("type") == "agent" else "🤖"
+        colour = "#D87030" if message.get("type") == "agent" else "#1A7E85FF"
     else:
         avatar = "🤗"
+        colour = "#333333"
 
     with st.chat_message(message["role"], avatar = avatar):
         if message.get("type") == "agent":
-            st.markdown(f"<div style='font-size: 24px;'>{message['content']}</div>",
+            st.markdown(f"<div style='font-size: 24px; color: {colour}; '>{message['content']}</div>",
                         unsafe_allow_html=True)
         else:
             st.markdown(
-                f"<p style='font-size: 24px; margin: 0;'>{message['content']}</p>",
+                f"<p style='font-size: 24px; margin: 0; color: {colour}; '>{message['content']}</p>",
                 unsafe_allow_html=True
             )
 
@@ -387,7 +389,7 @@ if audio_bytes:
         transcript = speech_to_text(audio_path)
         if transcript:
             st.session_state.messages.append({"role": "user", "content": transcript})
-            display_text(transcript)
+            display_text(transcript, colour = "#333333")
             os.remove(audio_path)
             st.rerun()
 
@@ -447,7 +449,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 continued_response = extract_agent_responses(continued_result)
         
             if continued_response:
-                st.markdown(f"<div style='font-size: 24px;'>{continued_response}</div>",
+                st.markdown(f"<div style='font-size: 24px; color: #D87030;'>{continued_response}</div>",
                             unsafe_allow_html=True)
                 if st.session_state.read_aloud_enabled:
                     with st.spinner("HopeBot is speaking 💬..."):
@@ -572,7 +574,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     agent_message = extract_agent_responses(agent_results)
 
                     with st.chat_message("assistant", avatar="⭐"):
-                        st.markdown(f"<div style='font-size: 24px;'>{agent_message}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-size: 24px; color: #D87030;'>{agent_message}</div>", unsafe_allow_html=True)
 
                         if st.session_state.read_aloud_enabled:
                             with st.spinner("HopeBot is speaking 💬..."):

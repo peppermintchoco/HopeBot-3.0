@@ -1,0 +1,25 @@
+[server]
+enableStaticServing = true
+
+[[theme.fontFaces]]
+family = "Space Grotesk"
+url = "app/static/SpaceGrotesk-Regular.ttf"
+weight = 700
+style = "normal"
+
+[theme]
+base = "light"
+
+primaryColor = "#D97757"
+backgroundColor = "#F8F6F1"
+secondaryBackgroundColor = "#E3E6DF"
+textColor = "#1A1A1A"
+
+font = "'Space Grotesk', sans-serif"
+headingFont = "'Space Grotesk', sans-serif"
+
+baseFontSize = 16
+baseFontWeight = 400
+
+baseRadius = "medium"
+borderColor = "#D8D5CE"
