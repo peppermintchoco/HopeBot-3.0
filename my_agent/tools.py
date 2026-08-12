@@ -9,9 +9,12 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
+from typing import Optional
+
 @tool
-def send_email(recipient: str, subject: str, body: str, attachment_path:str = None) -> str:
-    """Send an email to the user with the provided subject and body content."""
+def send_email(recipient: str, subject: str, body: str, attachment_path:Optional[str] = None) -> str:
+    """Send an email to the user with the provided subject and body content.
+    The recipient must be a plain email address only — never include markdown formatting, brackets, or mailto: links."""
 
     gmail_address = os.getenv('GMAIL_ADDRESS')
     gmail_password = os.getenv('GMAIL_APP_PASSWORD')
@@ -149,7 +152,7 @@ PSYCHOEDUCATION_CONTENT = {
                 "Keep a mood journal to track patterns and identify triggers."
             ]
         },
-        "recommended_interventions": ["Consider seeking professional help, a mental health professional will be able to guide you on the best course of action. NICE guidelines suggest guided self-help and/or group CBT"],
+        "recommended_interventions": ["NICE guidelines suggest guided self-help and/or group CBT. If you feel like you need more support, consider seeking professional help, as a mental health professional will be able to guide you on the best course of action."],
         "when_to_seek_help": "Consider seeing a mental health professional especially if it affects your daily functioning and quality of life.",
         "psychoeducational_resources": ["NHS Every Mind Matters: https://www.nhs.uk/every-mind-matters/", "NICE Guidelines for Depression in Adults: https://www.nice.org.uk/guidance/ng222", "Mental Health Foundation Self-Care Tips: https://www.mentalhealth.org.uk/explore-mental-health/blogs/self-care-tips", "NHS talking therapies self-referral: https://www.nhs.uk/mental-health/talking-therapies-medicine-treatments/talking-therapies-and-counselling/nhs-talking-therapies/"],
         "disclaimer": "HopeBot is not a diagnostic tool and it is recommended to seek professional advice."
@@ -183,7 +186,7 @@ PSYCHOEDUCATION_CONTENT = {
                 "Be kind to yourself about what you can manage right now - appreciate every small step you take."
             ]
         },
-        "recommended_interventions": ["We recommend seeking professional help to discuss the best course of action with a mental health professional. NICE guidelines suggest individual CBT (16 sessions), behavioural activation (12-16 sessions), antidepressant medication, or a combination of CBT and antidepressant."],
+        "recommended_interventions": ["NICE guidelines suggest individual CBT (16 sessions), behavioural activation (12-16 sessions), antidepressant medication, or a combination of CBT and antidepressant. We recommend seeking professional help to discuss the best course of action with a mental health professional."],
         "when_to_seek_help": "We recommend speaking to a mental health professional.",
         "psychoeducational_resources": ["NHS Every Mind Matters: https://www.nhs.uk/every-mind-matters/", "NICE Guidelines for Depression in Adults: https://www.nice.org.uk/guidance/ng222", "Mental Health Foundation Self-Care Tips: https://www.mentalhealth.org.uk/explore-mental-health/blogs/self-care-tips", "NHS talking therapies self-referral: https://www.nhs.uk/mental-health/talking-therapies-medicine-treatments/talking-therapies-and-counselling/nhs-talking-therapies/"],
         "disclaimer": "HopeBot is not a diagnostic tool and it is recommended to seek professional advice."
@@ -218,7 +221,7 @@ PSYCHOEDUCATION_CONTENT = {
                 "Maintain a consistent daily routine - even small structure helps when motivation is low."
             ]
         },
-        "recommended_interventions": ["We strongly encourage seeking professional help as soon as possible - a mental health professional will be able to guide you on the best course of action. NICE guidelines suggest individual CBT (16 sessions), behavioural activation (12-16 sessions), antidepressant medication, or a combination of CBT and antidepressant."],
+        "recommended_interventions": ["NICE guidelines suggest individual CBT (16 sessions), behavioural activation (12-16 sessions), antidepressant medication, or a combination of CBT and antidepressant. We strongly encourage seeking professional help as soon as possible - a mental health professional will be able to guide you on the best course of action."],
         "when_to_seek_help": "We strongly recommend speaking with a mental health professional to discuss the treatment options that are right for you",
         "psychoeducational_resources": ["NHS Every Mind Matters: https://www.nhs.uk/every-mind-matters/", "NICE Guidelines for Depression in Adults: https://www.nice.org.uk/guidance/ng222", "Mental Health Foundation Self-Care Tips: https://www.mentalhealth.org.uk/explore-mental-health/blogs/self-care-tips", "NHS talking therapies self-referral: https://www.nhs.uk/mental-health/talking-therapies-medicine-treatments/talking-therapies-and-counselling/nhs-talking-therapies/"],
         "disclaimer": "HopeBot is not a diagnostic tool and it is recommended to seek professional advice."

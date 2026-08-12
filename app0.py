@@ -366,12 +366,11 @@ footer_container = st.container()
 with footer_container:
     with footer_container:
         audio_bytes = audio_recorder(text="Click to record", icon_size="1x", icon_name="microphone",
-                                     energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate=30000)
+                                    energy_threshold=(-1, 0.5), pause_threshold=30, sample_rate=30000)
 
 if audio_bytes:
     if "last_audio" not in st.session_state or st.session_state.last_audio != audio_bytes:
         st.session_state.last_audio = audio_bytes
-
     with st.spinner("Transcribing..."):
         audio_path = "temp_audio.mp3"
         with open(audio_path, "wb") as f:
@@ -383,7 +382,7 @@ if audio_bytes:
             display_text(transcript, colour = "#333333")
             os.remove(audio_path)
             st.rerun()
-
+                        
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 # Conversation loop
 if st.session_state.participant_id is None:
@@ -542,6 +541,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     "role": "assistant", 
                     "content": display_messages,
                     "type": "hopebot"})
+            
             # Agent fires immediately after, appends its own message
             if phq9_complete() and not st.session_state.get("agent_ran") and not st.session_state.get('awaiting_confirmation'):
                 try:
