@@ -276,7 +276,7 @@ def build_score_summary():
     lines.append(f"\nYou scored {st.session_state.total_phq9_score} points on the PHQ-9.")
 
     # Q9 safety message
-    q9_category = st.session_state.answers_record[8]
+    q9_category = st.session_state.answers_record[9]
 
     if q9_category in ["B", "C", "D"]:
         lines.append(
