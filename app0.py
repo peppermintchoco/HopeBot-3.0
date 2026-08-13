@@ -354,7 +354,7 @@ for message in st.session_state.messages:
             )
 
 if st.session_state.play_greeting and st.session_state.read_aloud_enabled:
-    audio_file = text_to_speech("Thank you! Let's get started - how are you doing today?")
+    audio_file = text_to_speech("Thank you! Let's get started — what's been on your mind lately?")
     autoplay_audio(audio_file)
     os.remove(audio_file)
     st.session_state.play_greeting = False
