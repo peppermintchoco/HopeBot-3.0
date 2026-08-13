@@ -91,7 +91,7 @@ PSYCHOEDUCATION_CONTENT = {
     "Minimal": {
         "title": "Understanding Your PHQ-9 Results",
         "explanation": "Your results suggest minimal symptoms of depression.",
-        "what_this_means": "It is normal to experience low mood occasionally. Many people experience brief periods of low mood, this is a common part of life and does not necessarily indicate clinical concern",
+        "what_this_means": "Brief periods of low mood are common, and support is available if you notice symptoms continuing or worsening.",
         "self_care_tips": {
             "Lifestyle": [
                 "Maintain regular sleep patterns",

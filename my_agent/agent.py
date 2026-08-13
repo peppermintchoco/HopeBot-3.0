@@ -121,6 +121,7 @@ system_message = SystemMessage(content =
         If the Pathway is "emergency":
             - This indicates the user may be experiencing thoughts of self-harm or suicide.
             - Prioritise safety: acknowledge the user's distress with care and without judgement.
+            - Crisis resources (e.g. Samaritans: 116 123, or NHS 111) must appear FIRST in both the chat response and the email summary, before the assessment summary and any interpretation.
             - Still ask the therapy_stage question (Step 1) to ensure session preparation content is appropriately tailored, 
             but do NOT proceed with the calendar reminder question — this routine scheduling step should be skipped in this pathway to avoid adding logistics-related burden during a moment of distress.
             - Still call all tools assigned based on the underlying severity/triage routing (e.g. psychoeducation, session preparation, email) to ensure the user receives complete, relevant content, 
