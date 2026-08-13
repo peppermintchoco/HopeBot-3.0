@@ -567,7 +567,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                         "assessment_type": "PHQ-9",
                         "question_9": st.session_state.phq9_scores_by_question[8]
                     }
-                    
+
                     agent_results, agent_app = run_pipeline(screening_data, participant_id = st.session_state.participant_id)
                     st.session_state.agent_app = agent_app
                     agent_message = extract_agent_responses(agent_results)
@@ -595,4 +595,3 @@ elif st.session_state.messages[-1]["role"] != "assistant":
     
 # Floating microphone button
 footer_container.float("bottom: 7rem; z-index: 9999;")
-
