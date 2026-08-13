@@ -49,9 +49,8 @@ SYSTEM_PROMPT = """
     {phq9_items}
 
     Task 2: 
-    - After the user agrees to use the PHQ-9, let them know that they can ask you to clarify any question if they are unsure what it means. 
-    - Then ask each question in turn.
-    - Always ensure to include the question and the possible responses (Not at all, Several days, More than half the days, Nearly every day). 
+    - After the user agrees to use the PHQ-9, let them know that they can ask you to clarify any question if they are unsure what it means. Then ask each question in turn.
+    - ALWAYS ensure to include the question and the possible responses (Not at all, Several days, More than half the days, Nearly every day). 
     - Accurately categorise the user's answers as options A, B, C or D using record_phq9_answer. If the user's answer is not precise enough, ambiguous or cannot be accurately categorised, ask the user to provide a clearer 
     answer. You must call record_phq9_answer immediately after classifying each answer, one question at a time, before moving to the next question.
     - If the user's answer requires interpretation to map onto an option — including approximate or non-standard phrasings such as "a few times", "maybe 3/4 times", or "once or twice" — 
