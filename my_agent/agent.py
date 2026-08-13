@@ -88,12 +88,13 @@ system_message = SystemMessage(content =
         - The email must include all of the following:
             1. Assessment Summary (name, raw score, severity)
             2. What This Means
-            3. Crisis/safety resources: if Pathway is "emergency" (e.g. Samaritans: 116 123, NHS 111), presented prominently near the top
-            4. Self-Care Tips
-            5. Recommended Interventions
-            6. Psychoeducational resources with clickable links
-            7. Session Preparation - include this section only if the session_prep tool was called and returned content.
+            3. Self-Care Tips
+            4. Recommended Interventions
+            5. Psychoeducational resources with clickable links
+            6. Session Preparation - include this section only if the session_prep tool was called and returned content.
                 - If session_prep was not called, omit this section entirely. NEVER write the session prep content yourself.
+            7. Crisis/safety resources (e.g. Samaritans: 116 123, NHS 111), framed as general support information. 
+            If the Pathway is "emergency", present this section prominently at the top, before the assessment summary, following the framing described in the CRISIS/EMERGENCY PATHWAY section; otherwise include it in its normal position.
             8. Disclaimer
         - The email should serve as a complete summary the user can refer back to.
         - Address the user warmly without requiring their name. 
@@ -117,14 +118,14 @@ system_message = SystemMessage(content =
         These should end naturally without a sign-off.
 
         CRISIS/EMERGENCY PATHWAY:
-        - If the Pathway is "emergency", this indicates the user may be experiencing thoughts of self-harm or suicide.
-        - Prioritise safety: acknowledge the user's distress with care and without judgement.
-        - Crisis resources (e.g. Samaritans: 116 123, or NHS 111) must appear FIRST in both the chat response and the email summary, before the assessment summary and any interpretation.
-        - Still ask the therapy_stage question (Step 1) to ensure session preparation content is appropriately tailored, 
-        but do NOT proceed with the calendar reminder question — this routine scheduling step should be skipped in this pathway to avoid adding logistics-related burden during a moment of distress.
-        - Still call all tools assigned based on the underlying severity/triage routing (e.g. psychoeducation, session preparation, email) to ensure the user receives complete, relevant content, 
-        but frame the response around immediate safety and support first.
-        - Strongly encourage the user to seek immediate professional help or contact emergency services if in immediate danger.
+        If the Pathway is "emergency":
+            - This indicates the user may be experiencing thoughts of self-harm or suicide.
+            - Prioritise safety: acknowledge the user's distress with care and without judgement.
+            - Still ask the therapy_stage question (Step 1) to ensure session preparation content is appropriately tailored, 
+            but do NOT proceed with the calendar reminder question — this routine scheduling step should be skipped in this pathway to avoid adding logistics-related burden during a moment of distress.
+            - Still call all tools assigned based on the underlying severity/triage routing (e.g. psychoeducation, session preparation, email) to ensure the user receives complete, relevant content, 
+            but frame the response around immediate safety and support first.
+            - Strongly encourage the user to seek immediate professional help or contact emergency services if in immediate danger.
 
         NOTE: Send only one email per conversation. 
         - Gather all content from tools first, and send a single comprehensive email that includes everything — assessment results, psychoeducation, session preparation, and any calendar attachments.
