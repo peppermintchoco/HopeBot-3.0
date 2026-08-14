@@ -415,8 +415,9 @@ elif st.session_state.messages[-1]["role"] != "assistant":
             f"and resources shared have been helpful.<br>"
             f"Please remember that support is always available.<br><br>"
             f"To complete the study, please fill out the self-assessed PHQ-9 and feedback "
-            f"survey here: <a href='{survey_link}'>{survey_link}</a>.<br>Your participant ID is {st.session_state.participant_id}.<br>If you have any issues, please contact the "
-            f"researcher at {researcher_email}.<br><br>"
+            f"survey here: <a href='{survey_link}'>{survey_link}</a>.<br><b>Your participant ID is {st.session_state.participant_id}.<b><br>"
+            f"Do remember to enter your participant ID at the start of the survey.<br>"
+            f"If you have any issues, please contact the researcher at {researcher_email}.<br><br>"
             f"If you need urgent mental health support, you can reach the Samaritans anytime on 116 123 (free, 24/7) or by email at jo@samaritans.org.<br><br>"
             f"Take care. I'm here if you'd like to keep talking.🌿<br>Warm regards,<br>HopeBot" 
         )
