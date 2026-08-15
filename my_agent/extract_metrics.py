@@ -8,7 +8,7 @@ import pandas as pd
 client = Client()
 
 # ===== TASK COMPLETION (tool runs) =====
-tool_runs = client.list_runs(project_name = "hopebot-3-0-phase1-pilot", run_type = "tool")
+tool_runs = client.list_runs(project_name = "hopebot-3-0-phase2", run_type = "tool")
 
 tool_results = []
 
@@ -45,7 +45,7 @@ print(tool_df)
 tool_df.to_csv("phase2_dev_task_completion.csv", index = False)
 
 # ===== LATENCY & TOKEN CONSUMPTION (LLM RUNS) =====
-llm_runs = client.list_runs(project_name="hopebot-3-0-phase1-pilot", run_type="llm")
+llm_runs = client.list_runs(project_name="hopebot-3-0-phase2", run_type="llm")
 
 llm_results = []
 
