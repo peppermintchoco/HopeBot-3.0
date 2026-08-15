@@ -214,13 +214,15 @@ def get_assistant_response(messages):
     # Return the assistant's response
     return response, openai_messages
 
+from langchain_core.messages import AIMessage
+
 def extract_agent_responses(agent_results):
     messages = agent_results['messages']
 
     for message in reversed(messages):
-        if hasattr(message, 'content') and message.content:
+        if isinstance(message, AIMessage) and message.content:
             return message.content
-    return ""
+    return "I'm sorry, something went wrong generating a response. Please try again or contact the researcher."
 
 def display_text(content, colour = "#1A7E85FF"):
     lines = content.split("\n")
