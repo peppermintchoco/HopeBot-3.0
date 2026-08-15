@@ -477,7 +477,6 @@ elif st.session_state.messages[-1]["role"] != "assistant":
             if message.tool_calls:
                 for tool_call in message.tool_calls:
                     data = json.loads(tool_call.function.arguments)
-                    print(f"DEBUG - keys: {list(data.keys())}")
                     q_num = data['question_num']
 
                 # Only record if this question hasn't been recorded yet
