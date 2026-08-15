@@ -53,8 +53,8 @@ system_message = SystemMessage(content =
         - Ensure you use the tools assigned based on the triage. 
         - Let users know that a calendar function is available and offer to add appointments to their calendar if they request it. 
         - Ask the user whether they have an upcoming mental health appointment they would like to add to their calendar.
-        - Call the calendar_input ONLY if the user provides a date and a time. NEVER infer, assume, or invent an appointment date.
-        - If the user says they have an appointment but does not give the date, ask for it. If they decline or have no appointment, do not call calendar_input and do not mention a calendar file.
+        - If the user says they have an appointment but does not give a complete date (day, month, and year) and time, ask for whichever part is missing. Never infer or assume the year or any other part of the date.
+        - If they decline or have no appointment, do not mention a calendar file and do not include appointment_datetime or session_name when calling send_email.       
 
         SEQUENCE (follow this exact order):
         1. Check the Available Tools list. If "Session Preparation" is NOT listed, skip this step entirely and proceed to Step 2. Do not ask the user about their care journey stage.
@@ -67,11 +67,10 @@ system_message = SystemMessage(content =
         2. Call psychoeducation tool first
         3. Call session_prep tool ONLY if "Session Preparation" appears in the Available Tools list provided in your context. 
         Do not call this tool otherwise, even if you have already asked about the user's therapy stage.
-        4. Ask the user if they would like a calendar reminder for any self-booked mental health care appointment
-        5. If yes, ask for the specific date and time of the appointment. Do NOT call calendar_input until the user has provided both a date and a time in their own words.
-        6. Once a specific date and time have been given, call calendar_input to generate the .ics file using exactly what the user provided. Never infer, estimate, or invent a date or time.
-        7. Present the full summary in chat, after all content tools and calendar (if requested) have been called.
-        8. Then, if the user has provided an email address, call send_email with the same content.
+        4. Regardless of which tools are available or how severity was classified, always ask the user if they would like a calendar reminder for any self-booked mental health care appointment.
+        5. If yes, ask for the specific date and time of the appointment. Do NOT proceed until the user has provided both a date and a time in their own words.
+        6. Present the full summary in chat, after all content tools have been called.
+        7. Then, if the user has provided an email address, call send_email with the same content. If a calendar reminder was requested and a complete date and time were given, include appointment_datetime (ISO format, e.g. '2026-10-10T17:00:00') and session_name when calling send_email — the calendar file will be created and attached automatically.
 
         TOOL USAGE:
         - You MUST call psychoeducation and session_prep tools BEFORE generating any chat response, EXCEPT for the therapy_stage question in Step 1, which must be asked and answered first.
@@ -122,7 +121,8 @@ system_message = SystemMessage(content =
             - This indicates the user may be experiencing thoughts of self-harm or suicide.
             - Prioritise safety: acknowledge the user's distress with care and without judgement.
             - Crisis resources (e.g. Samaritans: 116 123, or NHS 111) must appear FIRST in both the chat response and the email summary, before the assessment summary and any interpretation.
-            - Ask the therapy_stage question (Step 1) to ensure session preparation content is appropriately tailored, exactly as in the standard sequence. Wait for the user's answer before calling session_prep
+            - If "Session Preparation" is in the Available Tools list, ask the therapy_stage question (Step 1), exactly as in the standard sequence, and wait for the user's answer before calling session_prep. 
+            - If "Session Preparation" is NOT in the Available Tools list, skip this entirely and do not ask about the user's care journey stage.
             - Do NOT proceed with the calendar reminder question — this routine scheduling step should be skipped in this pathway to avoid adding logistics-related burden during a moment of distress.
             - Call all tools assigned based on the underlying severity/triage routing (e.g. psychoeducation, session preparation, email) to ensure the user receives complete, relevant content, 
             but frame the response around immediate safety and support first.
@@ -207,17 +207,17 @@ def route_by_severity(assessment: str, triage_category: str, q9: int) -> dict:
     if assessment == 'PHQ-9' or assessment == 'GAD-7':
     # For score-based assessments (PHQ-9, GAD-7):
         if triage_category == "Minimal":
-            base_pathway, base_tools = "minimal", ["send_email", "calendar_input"]
+            base_pathway, base_tools = "minimal", ["send_email"]
         elif triage_category == 'Mild':
-            base_pathway, base_tools = "mild", ["send_email", "psychoeducation", "calendar_input"]
+            base_pathway, base_tools = "mild", ["send_email", "psychoeducation"]
         else:
-            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep", "calendar_input"]
+            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep"]
     else:
     # For binary assessments (MDQ):
         if triage_category == 'Positive':
-            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep", "calendar_input"]
+            base_pathway, base_tools = "clinical", ["send_email", "psychoeducation", "session_prep"]
         else:
-            base_pathway, base_tools = "minimal", ["send_email", "calendar_input"]
+            base_pathway, base_tools = "minimal", ["send_email"]
     
     # Safety override — non-zero Q9 always escalates regardless of score
     # Return emergency pathway with crisis-specific tools

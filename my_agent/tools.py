@@ -9,21 +9,39 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
+from datetime import datetime
+
 from typing import Optional
 
 @tool
-def send_email(recipient: str, subject: str, body: str, attachment_path:Optional[str] = None) -> str:
+def send_email(recipient: str,
+            subject: str,
+            body: str,
+            appointment_datetime: Optional[str] = None,
+            session_name: Optional[str]= None) -> str:
     """Send an email to the user with the provided subject and body content.
-    The recipient must be a plain email address only — never include markdown formatting, brackets, or mailto: links."""
-
-    if "calendar" in body.lower() and not attachment_path:
-        return ("Error: this email references a calendar reminder but no attachment_path was provided. "
-                "If calendar_input was called, retry send_email with the returned file path as attachment_path. "
-                "If no calendar reminder was requested, remove any mention of a calendar file from the email body.")
-
-    if attachment_path and not os.path.exists(attachment_path):
-        return f"Error: the file at {attachment_path} does not exist. Verify calendar_input completed successfully before retrying."
+    The recipient must be a plain email address only — never include markdown formatting, brackets, or mailto: links.
     
+    If the user has explicitly asked for a calendar reminder AND given a specific date (including 
+    year), month, day and time in their own words, pass appointment_datetime in ISO format 
+    (e.g. '2026-10-10T17:00:00') and session_name — a calendar file will be created and attached 
+    automatically. Never infer, estimate, or invent any part of the date or time. If the user 
+    requests a reminder without giving a complete date, ask them for it and wait for their reply 
+    before calling this tool. If no reminder was requested, omit both parameters."""
+
+    attachment_path = None
+    
+    if appointment_datetime and session_name:
+        dt = datetime.fromisoformat(appointment_datetime)
+        if dt.year < datetime.now().year:
+            return "Error: the appointment date appears to be in the past or missing a year. Please confirm the year with the user and retry."
+    
+        attachment_path, _ = calendar_input.func(
+            recipient = recipient,
+            appointment_datetime = datetime.fromisoformat(appointment_datetime),
+            session_name = session_name
+        )
+
     gmail_address = os.getenv('GMAIL_ADDRESS')
     gmail_password = os.getenv('GMAIL_APP_PASSWORD')
     
@@ -71,11 +89,7 @@ import uuid
 
 @tool
 def calendar_input(recipient: str, appointment_datetime: datetime, session_name: str) -> str:
-    """Takes in appointment details and creates a calendar (.ics) file for an upcoming appointment.
-    Only call this tool if the user has explicitly asked for a calendar reminder or 
-    appointment file AND has given a specific date and time in their own words in this 
-    conversation. Never infer, estimate, or invent a date or time. If the user asks for a 
-    reminder without giving a date, ask them for one and wait for their reply before calling this tool."""
+    """Takes in appointment details and creates a calendar (.ics) file for an upcoming appointment."""
     event = Event()
     calendar = Calendar()
 
@@ -91,7 +105,7 @@ def calendar_input(recipient: str, appointment_datetime: datetime, session_name:
     with open(filename, 'wb') as f:
         f.write(calendar.to_ical())
     
-    return f"Calendar file '{filename}' created for {session_name} on {appointment_datetime}. Please download and open to add to your calendar."
+    return filename, f"Calendar file created for {session_name} on {appointment_datetime}."
 
 
 # Tool 3: Personalized psychoeducation function
