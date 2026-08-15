@@ -340,7 +340,7 @@ float_init()
 for message in st.session_state.messages:
     if message["role"] == "assistant":
         avatar = "⭐" if message.get("type") == "agent" else "🤖"
-        colour = "#D87030" if message.get("type") == "agent" else "#1A7E85FF"
+        colour = "#3B5998" if message.get("type") == "agent" else "#1A7E85FF"
     else:
         avatar = "🤗"
         colour = "#333333"
@@ -449,7 +449,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                 continued_response = extract_agent_responses(continued_result)
         
             if continued_response:
-                st.markdown(f"<div style='font-size: 24px; color: #D87030;'>{continued_response}</div>",
+                st.markdown(f"<div style='font-size: 24px; color: #3B5998;'>{continued_response}</div>",
                             unsafe_allow_html=True)
                 if st.session_state.read_aloud_enabled:
                     with st.spinner("HopeBot is speaking 💬..."):
@@ -574,7 +574,7 @@ elif st.session_state.messages[-1]["role"] != "assistant":
                     agent_message = extract_agent_responses(agent_results)
 
                     with st.chat_message("assistant", avatar="⭐"):
-                        st.markdown(f"<div style='font-size: 24px; color: #D87030;'>{agent_message}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-size: 24px; color: #3B5998;'>{agent_message}</div>", unsafe_allow_html=True)
 
                         if st.session_state.read_aloud_enabled:
                             with st.spinner("HopeBot is speaking 💬..."):
