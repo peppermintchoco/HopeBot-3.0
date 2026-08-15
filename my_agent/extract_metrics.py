@@ -64,8 +64,8 @@ for run in llm_runs:
     })
 
 llm_df = pd.DataFrame(llm_results)
-print(llm_df[llm_df["participant_id"] == "P02"]["latency_seconds"].describe())
-llm_df.to_csv("phase2_dev_latency_tokens.csv", index = False)
+# print(llm_df[llm_df["participant_id"] == "P02"]["latency_seconds"].describe())
+llm_df.to_csv("phase2_latency_tokens.csv", index = False)
 
 # ===== SUMMARY STATISTICS =====
 print(tool_df[tool_df["participant_id"] == "P02"]["tool_name"].value_counts())
